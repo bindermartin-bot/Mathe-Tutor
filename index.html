@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Mathe-Journal</title>
+    <title>Sokratisches Mathe-Journal (Kopier-Assistent)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -41,6 +41,7 @@
             flex: 1;
             background: #2c3e50;
             color: white;
+            justify-content: space-between;
         }
         .canvas-container {
             flex: 1;
@@ -72,49 +73,66 @@
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.98);
         }
         .btn-clear { background: #e74c3c; color: white; }
         .btn-clear:hover { background: #c0392b; }
-        .btn-coach { background: #2ecc71; color: white; width: 100%; font-size: 16px; padding: 12px; margin-top: 10px;}
-        .btn-coach:hover { background: #27ae60; }
         
-        .chat-output {
-            flex: 1;
+        .btn-copy { 
+            background: #2ecc71; 
+            color: white; 
+            width: 100%; 
+            font-size: 18px; 
+            padding: 15px; 
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        .btn-copy:hover { background: #27ae60; }
+        
+        .instructions-box {
             background: #34495e;
             border-radius: 6px;
             padding: 15px;
-            overflow-y: auto;
-            margin-top: 10px;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-        .ai-message {
-            background: #16a085;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
         }
         .meta-input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             margin-bottom: 10px;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 14px;
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        .status-success {
+            background-color: #27ae60;
+            color: white;
         }
     </style>
 </head>
 <body>
 
-    <h1>📝 Digitales Rechenjournal & Sokratischer Assistent</h1>
+    <h1>📝 Digitales Rechenjournal & KI-Kopierassistent</h1>
     
     <div class="container">
         <div class="panel left-panel">
-            <input type="text" class="meta-input" placeholder="Thema / Aufgabe hier eintragen (z.B. Quadratische Gleichungen Ex. 4)...">
+            <input type="text" class="meta-input" placeholder="Thema / Aufgabe hier eintragen (z.B. Logarithmengleichungen Ex. 2)...">
             <div class="toolbar">
                 <button class="btn-clear" onclick="clearCanvas()">Löschen</button>
-                <span style="align-self: center; color: #7f8c8d; font-size: 14px;">✍️ Schreibe deine Aufgabe und Lösungsweg mit dem Stift in das karierte Feld.</span>
+                <span style="align-self: center; color: #7f8c8d; font-size: 14px;">✍️ Löse die Aufgabe mit dem digitalen Stift direkt im Feld unten.</span>
             </div>
             <div class="canvas-container" id="canvas-wrapper">
                 <canvas id="paintCanvas"></canvas>
@@ -122,34 +140,42 @@
         </div>
         
         <div class="panel right-panel">
-            <h2>🤖 Sokratischer Coach</h2>
-            <p style="font-size: 13px; color: #bdc3c7; margin: 0;">Klicke auf den Button, damit die KI deinen handschriftlichen Lösungsweg analysiert und dir einen Tipp gibt.</p>
+            <div>
+                <h2>🤖 Anleitung</h2>
+                <div class="instructions-box">
+                    <ol style="padding-left: 20px; margin: 0;">
+                        <li style="margin-bottom: 8px;">Rechne links deine mathematische Aufgabe ganz normal mit dem Stift.</li>
+                        <li style="margin-bottom: 8px;">Öffne im <strong>Split-Screen</strong> dein eigenes KI-Konto (ChatGPT, Gemini oder Copilot).</li>
+                        <li style="margin-bottom: 8px;">Klicke unten auf den grossen grünen Button. Dein Rechenweg und die sokratische Anweisung werden automatisch kopiert.</li>
+                        <li>Klicke in das Chatfeld deiner KI, drücke <strong>Strg + V</strong> und schicke die Nachricht ab.</li>
+                    </ol>
+                </div>
+            </div>
             
-            <button class="btn-coach" onclick="askSocraticCoach()">Frage KI-Coach um einen Hinweis</button>
-            
-            <div class="chat-output" id="chatContainer">
-                <div class="ai-message">Grüezi! Ich bin dein sokratischer Coach. Löse die Aufgabe links mit deinem Stift. Wenn du steckenbleibst oder das Resultat prüfen willst, klicke oben auf den grünen Button. Ich sage dir nicht die Lösung, aber ich helfe dir auf den Weg!</div>
+            <div>
+                <button class="btn-copy" onclick="copyToClipboard()">📋 In die Zwischenablage kopieren</button>
+                <div class="status-message status-success" id="statusMessage">✓ Erfolgreich kopiert! Jetzt mit Strg+V in die KI einfügen.</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Canvas Logik für Stifteingabe
+        // Canvas-Logik für präzise Stifteingabe
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
         
-        // Canvas Grösse an Container anpassen
         function resizeCanvas() {
             canvas.width = wrapper.clientWidth;
             canvas.height = wrapper.clientHeight;
             ctx.strokeStyle = '#2c3e50';
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
         }
         
         window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100); // Verzögerung um CSS-Rendering abzuwarten
+        setTimeout(resizeCanvas, 100); // Warten bis CSS geladen ist
 
         let drawing = false;
 
@@ -166,7 +192,6 @@
         function draw(e) {
             if (!drawing) return;
             
-            // Touch- und Stiftunterstützung für Tablets
             const rect = canvas.getBoundingClientRect();
             let clientX = e.clientX || (e.touches && e.touches[0].clientX);
             let clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -180,10 +205,13 @@
             e.preventDefault();
         }
 
+        // Event-Listener für Maus und Digitalstifte
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
         
+        // Touch- und Stylus-Unterstützung für Tablets (iPad/Surface/Convertibles)
         canvas.addEventListener('touchstart', startDrawing, {passive: false});
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
@@ -192,39 +220,34 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // KI-Anbindung Logik
-       async function askSocraticCoach() {
-    const imageDataUrl = canvas.toDataURL('image/png');
-    
-    // Wir senden das Bild an unsere eigene, sichere Adresse (die Serverless Function)
-    const response = await fetch('/api/socratic-coach', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl })
-    });
-    
-    const data = await response.json();
-    
-    // Die Antwort im Chat anzeigen
-    displayBotResponse(data.text);
-}
+        // Intelligente Kopier-Funktion (Kombiniert Bild und Text)
+        async function copyToClipboard() {
+            try {
+                // 1. Handschrift aus dem Canvas als PNG-Blob exportieren
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                // 2. Sokratischen System-Prompt definieren
+                const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild meines aktuellen Rechenwegs. Analysiere diesen Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, stelle mir eine präzise, motivierende Frage oder gib mir einen minimalen Denkanstoss auf Schweizerdeutsch, damit ich selbst auf den nächsten Schritt komme.";
 
-            // --- HINWEIS ZUR INTEGRATION DER API ---
-            // Da dies eine statische GitHub-Seite ist, darf kein API-Key im Frontend fest verbaut werden (Sicherheitsrisiko).
-            // Für den echten Einsatz bindet man hier einen API-Call an ein schulisches Backend oder eine Serverless-Function an.
-            // Zur Demonstration simuliert diese App die Antwort, basierend darauf, ob im Feld gezeichnet wurde.
-            
-            setTimeout(() => {
-                loadingDiv.remove();
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'ai-message';
+                // 3. Bild und Prompt gleichzeitig in die Zwischenablage des Systems legen
+                const item = new ClipboardItem({
+                    "image/png": blob,
+                    "text/plain": new Blob([systemPrompt], { type: "text/plain" })
+                });
                 
-                // Hier folgt die simuliert-sokratische Antwort, die im Echtbetrieb direkt von gpt-4o / claude-3-5-sonnet kommt:
-                responseDiv.innerHTML = `<strong>Coach:</strong> Ich sehe deinen Ansatz bei der Gleichung. Schau dir mal den Übergang von Zeile 2 zu Zeile 3 an. Du hast dort probiert, auf beiden Seiten zu subtrahieren. Welches Vorzeichen hat sich dabei beim zweiten Term eingeschlichen? Überprüf das nochmals kurz!`;
+                await navigator.clipboard.write([item]);
                 
-                chatContainer.appendChild(responseDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 2000);
+                // Visuelle Bestätigung für die Lernenden einblenden
+                const status = document.getElementById('statusMessage');
+                status.style.display = 'block';
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 4000);
+
+            } catch (err) {
+                console.error('Fehler beim Kopieren: ', err);
+                alert('Das Kopieren hat leider nicht geklappt. Stelle sicher, dass die App über eine sichere Verbindung (https://) läuft.');
+            }
         }
     </script>
 </body>
