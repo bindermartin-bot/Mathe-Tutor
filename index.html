@@ -3,57 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Mathe-Journal (Kopier-Assistent)</title>
+    <title>Sokratischer KI-Assistent v2</title>
     <style>
+        :root {
+            --primary: #4a154b; /* Neues, klares Violett zur visuellen Kontrolle */
+            --secondary: #0078d4;
+            --success: #107c41;
+            --danger: #a80000;
+            --bg: #f3f2f1;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
         }
+
         h1 {
-            color: #2c3e50;
-            margin-top: 0;
-            font-size: 24px;
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
         .container {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             flex: 1;
             min-height: 0;
         }
+
         .panel {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #edebe9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             padding: 15px;
             display: flex;
             flex-direction: column;
         }
+
         .left-panel {
             flex: 2;
         }
+
         .right-panel {
             flex: 1;
-            background: #2c3e50;
-            color: white;
-            justify-content: space-between;
+            background: #faf9f8;
+            border-left: 3px solid var(--primary);
         }
+
+        .meta-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #d2d0ce;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .toolbar {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+
+        .btn-clear { background: #fde7e9; color: var(--danger); }
+        .btn-clear:hover { background: #fcd2d6; }
+        
+        .btn-copy { 
+            background: var(--success); 
+            color: white; 
+            font-size: 16px;
+            padding: 14px;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 2px 8px rgba(16, 124, 65, 0.2);
+        }
+        .btn-copy:hover { background: #0b592e; }
+        
         .canvas-container {
             flex: 1;
             position: relative;
-            border: 2px dashed #bdc3c7;
-            border-radius: 6px;
-            background-color: #fafafa;
-            /* Mathematischer Karo-Hintergrund */
-            background-size: 20px 20px;
-            background-image: linear-gradient(to right, #eef0f2 1px, transparent 1px),
-                              linear-gradient(to bottom, #eef0f2 1px, transparent 1px);
+            border: 1px solid #a19f9d;
+            border-radius: 4px;
+            background-color: #ffffff;
+            /* Rechenheft-Karos */
+            background-size: 25px 25px;
+            background-image: linear-gradient(to right, #f3f2f1 1px, transparent 1px),
+                              linear-gradient(to bottom, #f3f2f1 1px, transparent 1px);
+            overflow: hidden;
         }
+
         canvas {
             position: absolute;
             top: 0;
@@ -61,78 +121,51 @@
             width: 100%;
             height: 100%;
             cursor: crosshair;
+            touch-action: none; /* Wichtig: Verhindert das Scrollen der Seite bei Stifteingabe */
         }
-        .toolbar {
-            margin-bottom: 10px;
-            display: flex;
-            gap: 10px;
-        }
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        .btn-clear { background: #e74c3c; color: white; }
-        .btn-clear:hover { background: #c0392b; }
-        
-        .btn-copy { 
-            background: #2ecc71; 
-            color: white; 
-            width: 100%; 
-            font-size: 18px; 
-            padding: 15px; 
-            border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-        .btn-copy:hover { background: #27ae60; }
-        
-        .instructions-box {
-            background: #34495e;
-            border-radius: 6px;
-            padding: 15px;
+
+        .instructions {
             font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #323130;
         }
-        .meta-input {
-            width: 100%;
+
+        .prompt-preview {
+            background: #f3f2f1;
             padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #bdc3c7;
             border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
+            font-size: 12px;
+            color: #605e5c;
+            border-left: 3px solid #a19f9d;
+            margin-top: 10px;
+            font-style: italic;
         }
-        .status-message {
-            margin-top: 15px;
-            padding: 10px;
+
+        .status-popup {
+            background-color: var(--success);
+            color: white;
+            padding: 12px;
             border-radius: 4px;
             text-align: center;
             font-weight: bold;
+            margin-top: 10px;
             display: none;
+            animation: fadeIn 0.3s;
         }
-        .status-success {
-            background-color: #27ae60;
-            color: white;
-        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <h1>📝 Digitales Rechenjournal & KI-Kopierassistent</h1>
+    <h1>📐 Sokratisches Rechenjournal <span style="font-size: 12px; color: #605e5c;">v2.0 (Stable)</span></h1>
     
     <div class="container">
         <div class="panel left-panel">
-            <input type="text" class="meta-input" placeholder="Thema / Aufgabe hier eintragen (z.B. Logarithmengleichungen Ex. 2)...">
+            <input type="text" class="meta-input" placeholder="Welche Aufgabe löst du gerade? (z.B. Geometrie S. 44, Aufg. 2)">
             <div class="toolbar">
-                <button class="btn-clear" onclick="clearCanvas()">Löschen</button>
-                <span style="align-self: center; color: #7f8c8d; font-size: 14px;">✍️ Löse die Aufgabe mit dem digitalen Stift direkt im Feld unten.</span>
+                <button class="btn btn-clear" onclick="clearCanvas()">Feld löschen</button>
+                <span style="color: #605e5c; font-size: 13px;">✍️ Nutze deinen Stift, um im Feld unten zu rechnen.</span>
             </div>
             <div class="canvas-container" id="canvas-wrapper">
                 <canvas id="paintCanvas"></canvas>
@@ -140,48 +173,76 @@
         </div>
         
         <div class="panel right-panel">
-            <div>
-                <h2>🤖 Anleitung</h2>
-                <div class="instructions-box">
-                    <ol style="padding-left: 20px; margin: 0;">
-                        <li style="margin-bottom: 8px;">Rechne links deine mathematische Aufgabe ganz normal mit dem Stift.</li>
-                        <li style="margin-bottom: 8px;">Öffne im <strong>Split-Screen</strong> dein eigenes KI-Konto (ChatGPT, Gemini oder Copilot).</li>
-                        <li style="margin-bottom: 8px;">Klicke unten auf den grossen grünen Button. Dein Rechenweg und die sokratische Anweisung werden automatisch kopiert.</li>
-                        <li>Klicke in das Chatfeld deiner KI, drücke <strong>Strg + V</strong> und schicke die Nachricht ab.</li>
-                    </ol>
+            <div class="instructions">
+                <h2 style="margin-top:0; color: var(--primary); font-size: 18px;">🤖 KI-Kopierhilfe</h2>
+                <p>Verwende diese App im <strong>Split-Screen</strong> neben deinem ChatGPT, Gemini oder Copilot.</p>
+                <ol style="padding-left: 20px;">
+                    <li style="margin-bottom: 8px;">Löse die Aufgabe links handschriftlich.</li>
+                    <li style="margin-bottom: 8px;">Klicke unten auf den grünen Button.</li>
+                    <li style="margin-bottom: 8px;">Wechsle zu deiner KI, klicke ins Schreibfeld und drücke <strong>Strg + V</strong> (oder Einfügen).</li>
+                </ol>
+                <p style="font-size: 12px; font-weight: bold; margin-bottom: 2px;">Mitkopierter unsichtbarer Befehl:</p>
+                <div class="prompt-preview">
+                    "Du bist mein sokratischer BM-Mathelehrer... Verrate mir nicht die Lösung, sondern stelle eine Frage auf Schweizerdeutsch..."
                 </div>
             </div>
             
             <div>
-                <button class="btn-copy" onclick="copyToClipboard()">📋 In die Zwischenablage kopieren</button>
-                <div class="status-message status-success" id="statusMessage">✓ Erfolgreich kopiert! Jetzt mit Strg+V in die KI einfügen.</div>
+                <div class="status-popup" id="statusMessage">✓ Bereit zum Einfügen in ChatGPT/Gemini!</div>
+                <button class="btn btn-copy" onclick="copyToClipboard()">📋 Inhalt für KI kopieren</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Canvas-Logik für präzise Stifteingabe
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
-        
-        function resizeCanvas() {
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 3;
+        let drawing = false;
+
+        function initCanvas() {
+            // Holen die exakte Pixelgrösse des Containers
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+            
+            // Stift-Einstellungen
+            ctx.strokeStyle = '#111111';
+            ctx.lineWidth = 2.5;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
-        
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100); // Warten bis CSS geladen ist
 
-        let drawing = false;
+        // Canvas initialisieren und bei Fenstergrössenänderung anpassen
+        window.addEventListener('load', initCanvas);
+        window.addEventListener('resize', initCanvas);
+        // Sicherheits-Timeout falls CSS verzögert lädt
+        setTimeout(initCanvas, 500);
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            // Unterstützung für Maus und Touch/Stift
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
 
         function startDrawing(e) {
             drawing = true;
-            draw(e);
+            const coord = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coord.x, coord.y);
+            e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const coord = getCoordinates(e);
+            ctx.lineTo(coord.x, coord.y);
+            ctx.stroke();
+            e.preventDefault();
         }
 
         function stopDrawing() {
@@ -189,29 +250,13 @@
             ctx.beginPath();
         }
 
-        function draw(e) {
-            if (!drawing) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            
-            if (!clientX || !clientY) return;
-
-            ctx.lineTo(clientX - rect.left, clientY - rect.top);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(clientX - rect.left, clientY - rect.top);
-            e.preventDefault();
-        }
-
-        // Event-Listener für Maus und Digitalstifte
+        // Event-Zuweisung (Maus)
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
         
-        // Touch- und Stylus-Unterstützung für Tablets (iPad/Surface/Convertibles)
+        // Event-Zuweisung (Stift / Touch auf Tablets)
         canvas.addEventListener('touchstart', startDrawing, {passive: false});
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
@@ -220,33 +265,34 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Intelligente Kopier-Funktion (Kombiniert Bild und Text)
+        // Absolut stabile Kopierfunktion via HTML-Zwischenablage
         async function copyToClipboard() {
             try {
-                // 1. Handschrift aus dem Canvas als PNG-Blob exportieren
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const dataUrl = canvas.toDataURL('image/png');
                 
-                // 2. Sokratischen System-Prompt definieren
                 const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild meines aktuellen Rechenwegs. Analysiere diesen Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, stelle mir eine präzise, motivierende Frage oder gib mir einen minimalen Denkanstoss auf Schweizerdeutsch, damit ich selbst auf den nächsten Schritt komme.";
 
-                // 3. Bild und Prompt gleichzeitig in die Zwischenablage des Systems legen
+                // Wir verpacken Text und Bild in ein sauberes HTML-Paket, das jeder Browser versteht
+                const htmlCode = `<p>${systemPrompt}</p><br><img src="${dataUrl}" alt="Rechenweg">`;
+                
+                const blobHtml = new Blob([htmlCode], { type: 'text/html' });
+                const blobText = new Blob([systemPrompt + "\n[Bild angehängt]"], { type: 'text/plain' });
+
                 const item = new ClipboardItem({
-                    "image/png": blob,
-                    "text/plain": new Blob([systemPrompt], { type: "text/plain" })
+                    'text/html': blobHtml,
+                    'text/plain': blobText
                 });
                 
                 await navigator.clipboard.write([item]);
                 
-                // Visuelle Bestätigung für die Lernenden einblenden
+                // Erfolg anzeigen
                 const status = document.getElementById('statusMessage');
                 status.style.display = 'block';
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 4000);
+                setTimeout(() => { status.style.display = 'none'; }, 3000);
 
             } catch (err) {
-                console.error('Fehler beim Kopieren: ', err);
-                alert('Das Kopieren hat leider nicht geklappt. Stelle sicher, dass die App über eine sichere Verbindung (https://) läuft.');
+                console.error(err);
+                alert('Fehler beim Kopieren. Bitte stelle sicher, dass die Seite über "https" aufgerufen wird (GitHub Pages macht das automatisch).');
             }
         }
     </script>
