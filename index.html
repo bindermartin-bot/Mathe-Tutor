@@ -193,19 +193,21 @@
         }
 
         // KI-Anbindung Logik
-        async function askSocraticCoach() {
-            const chatContainer = document.getElementById('chatContainer');
-            
-            // Visuelles Feedback, dass die KI arbeitet
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'ai-message';
-            loadingDiv.style.background = '#e67e22';
-            loadingDiv.innerText = 'Analysiere Handschrift... Einen Moment bitte...';
-            chatContainer.appendChild(loadingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            // Canvas als Bild (Base64) exportieren
-            const imageDataUrl = canvas.toDataURL('image/png');
+       async function askSocraticCoach() {
+    const imageDataUrl = canvas.toDataURL('image/png');
+    
+    // Wir senden das Bild an unsere eigene, sichere Adresse (die Serverless Function)
+    const response = await fetch('/api/socratic-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageDataUrl })
+    });
+    
+    const data = await response.json();
+    
+    // Die Antwort im Chat anzeigen
+    displayBotResponse(data.text);
+}
 
             // --- HINWEIS ZUR INTEGRATION DER API ---
             // Da dies eine statische GitHub-Seite ist, darf kein API-Key im Frontend fest verbaut werden (Sicherheitsrisiko).
