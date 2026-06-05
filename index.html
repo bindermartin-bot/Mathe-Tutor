@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratischer KI-Assistent v2</title>
+    <title>Sokratischer KI-Assistent v3</title>
     <style>
         :root {
-            --primary: #4a154b; /* Neues, klares Violett zur visuellen Kontrolle */
+            --primary: #4a154b;
             --secondary: #0078d4;
             --success: #107c41;
             --danger: #a80000;
@@ -28,9 +28,6 @@
             color: var(--primary);
             margin: 0 0 10px 0;
             font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .container {
@@ -90,16 +87,23 @@
         .btn-clear { background: #fde7e9; color: var(--danger); }
         .btn-clear:hover { background: #fcd2d6; }
         
-        .btn-copy { 
-            background: var(--success); 
-            color: white; 
-            font-size: 16px;
-            padding: 14px;
+        .btn-step {
+            color: white;
+            font-size: 15px;
+            padding: 12px;
             width: 100%;
-            margin-top: auto;
-            box-shadow: 0 2px 8px rgba(16, 124, 65, 0.2);
+            margin-bottom: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .btn-copy:hover { background: #0b592e; }
+        
+        .btn-step1 { background: var(--secondary); }
+        .btn-step1:hover { background: #005a9e; }
+        
+        .btn-step2 { background: var(--success); }
+        .btn-step2:hover { background: #0b592e; }
         
         .canvas-container {
             flex: 1;
@@ -107,11 +111,9 @@
             border: 1px solid #a19f9d;
             border-radius: 4px;
             background-color: #ffffff;
-            /* Rechenheft-Karos */
             background-size: 25px 25px;
             background-image: linear-gradient(to right, #f3f2f1 1px, transparent 1px),
                               linear-gradient(to bottom, #f3f2f1 1px, transparent 1px);
-            overflow: hidden;
         }
 
         canvas {
@@ -121,7 +123,7 @@
             width: 100%;
             height: 100%;
             cursor: crosshair;
-            touch-action: none; /* Wichtig: Verhindert das Scrollen der Seite bei Stifteingabe */
+            touch-action: none;
         }
 
         .instructions {
@@ -130,42 +132,26 @@
             color: #323130;
         }
 
-        .prompt-preview {
-            background: #f3f2f1;
-            padding: 10px;
-            border-radius: 4px;
+        .status-msg {
             font-size: 12px;
-            color: #605e5c;
-            border-left: 3px solid #a19f9d;
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        .status-popup {
-            background-color: var(--success);
-            color: white;
-            padding: 12px;
-            border-radius: 4px;
-            text-align: center;
             font-weight: bold;
-            margin-top: 10px;
+            color: var(--success);
+            margin-top: -5px;
+            margin-bottom: 10px;
             display: none;
-            animation: fadeIn 0.3s;
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <h1>📐 Sokratisches Rechenjournal <span style="font-size: 12px; color: #605e5c;">v2.0 (Stable)</span></h1>
+    <h1>📐 Sokratisches Rechenjournal <span style="font-size: 12px; color: #605e5c;">v3.0 (Multi-Copy)</span></h1>
     
     <div class="container">
         <div class="panel left-panel">
-            <input type="text" class="meta-input" placeholder="Welche Aufgabe löst du gerade? (z.B. Geometrie S. 44, Aufg. 2)">
+            <input type="text" class="meta-input" placeholder="Welche Aufgabe löst du gerade?">
             <div class="toolbar">
                 <button class="btn btn-clear" onclick="clearCanvas()">Feld löschen</button>
-                <span style="color: #605e5c; font-size: 13px;">✍️ Nutze deinen Stift, um im Feld unten zu rechnen.</span>
+                <span style="color: #605e5c; font-size: 13px;">✍️ Nutze deinen Stift für den Lösungsweg.</span>
             </div>
             <div class="canvas-container" id="canvas-wrapper">
                 <canvas id="paintCanvas"></canvas>
@@ -174,22 +160,26 @@
         
         <div class="panel right-panel">
             <div class="instructions">
-                <h2 style="margin-top:0; color: var(--primary); font-size: 18px;">🤖 KI-Kopierhilfe</h2>
-                <p>Verwende diese App im <strong>Split-Screen</strong> neben deinem ChatGPT, Gemini oder Copilot.</p>
-                <ol style="padding-left: 20px;">
-                    <li style="margin-bottom: 8px;">Löse die Aufgabe links handschriftlich.</li>
-                    <li style="margin-bottom: 8px;">Klicke unten auf den grünen Button.</li>
-                    <li style="margin-bottom: 8px;">Wechsle zu deiner KI, klicke ins Schreibfeld und drücke <strong>Strg + V</strong> (oder Einfügen).</li>
+                <h2 style="margin-top:0; color: var(--primary); font-size: 18px;">🤖 2-Schritt-Kopierhilfe</h2>
+                <p>Weil ChatGPT/Gemini Text und Bild getrennt erwarten, nutzen wir zwei Klicks:</p>
+                
+                <ol style="padding-left: 20px; margin-bottom: 25px;">
+                    <li>Löse die Aufgabe links.</li>
+                    <li>Klicke auf <strong>Schritt 1</strong>, wechsle zur KI und drücke <strong>Strg + V</strong>.</li>
+                    <li>Klicke auf <strong>Schritt 2</strong>, wechsle zur KI und drücke nochmals <strong>Strg + V</strong>.</li>
                 </ol>
-                <p style="font-size: 12px; font-weight: bold; margin-bottom: 2px;">Mitkopierter unsichtbarer Befehl:</p>
-                <div class="prompt-preview">
-                    "Du bist mein sokratischer BM-Mathelehrer... Verrate mir nicht die Lösung, sondern stelle eine Frage auf Schweizerdeutsch..."
-                </div>
             </div>
             
-            <div>
-                <div class="status-popup" id="statusMessage">✓ Bereit zum Einfügen in ChatGPT/Gemini!</div>
-                <button class="btn btn-copy" onclick="copyToClipboard()">📋 Inhalt für KI kopieren</button>
+            <div style="margin-top: auto;">
+                <button class="btn btn-step btn-step1" onclick="copyTextPrompt()">
+                    <span>1. Sokratischen Befehl kopieren</span> <span>📋</span>
+                </button>
+                <div class="status-msg" id="statusText">✓ Befehl kopiert! In KI einfügen.</div>
+
+                <button class="btn btn-step btn-step2" onclick="copyImageOnly()">
+                    <span>2. Rechenweg als Bild kopieren</span> <span>🖼️</span>
+                </button>
+                <div class="status-msg" id="statusImage">✓ Bild kopiert! In KI einfügen.</div>
             </div>
         </div>
     </div>
@@ -201,32 +191,23 @@
         let drawing = false;
 
         function initCanvas() {
-            // Holen die exakte Pixelgrösse des Containers
             canvas.width = wrapper.offsetWidth;
             canvas.height = wrapper.offsetHeight;
-            
-            // Stift-Einstellungen
             ctx.strokeStyle = '#111111';
             ctx.lineWidth = 2.5;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
 
-        // Canvas initialisieren und bei Fenstergrössenänderung anpassen
         window.addEventListener('load', initCanvas);
         window.addEventListener('resize', initCanvas);
-        // Sicherheits-Timeout falls CSS verzögert lädt
         setTimeout(initCanvas, 500);
 
         function getCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
-            // Unterstützung für Maus und Touch/Stift
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function startDrawing(e) {
@@ -245,55 +226,47 @@
             e.preventDefault();
         }
 
-        function stopDrawing() {
-            drawing = false;
-            ctx.beginPath();
-        }
+        function stopDrawing() { drawing = false; ctx.beginPath(); }
 
-        // Event-Zuweisung (Maus)
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
-        
-        // Event-Zuweisung (Stift / Touch auf Tablets)
         canvas.addEventListener('touchstart', startDrawing, {passive: false});
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild meines aktuellen Rechenwegs. Analysiere diesen Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, stelle mir eine präzise, motivierende Frage oder gib mir einen minimalen Denkanstoss auf Schweizerdeutsch, damit ich selbst auf den nächsten Schritt komme.";
+
+        // Schritt 1: Reinen Text kopieren
+        async function copyTextPrompt() {
+            try {
+                await navigator.clipboard.writeText(systemPrompt);
+                showStatus('statusText');
+            } catch (err) {
+                alert('Fehler beim Kopieren des Textes.');
+            }
         }
 
-        // Absolut stabile Kopierfunktion via HTML-Zwischenablage
-        async function copyToClipboard() {
+        // Schritt 2: Echtes Bild (Datei) kopieren
+        async function copyImageOnly() {
             try {
-                const dataUrl = canvas.toDataURL('image/png');
-                
-                const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild meines aktuellen Rechenwegs. Analysiere diesen Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, stelle mir eine präzise, motivierende Frage oder gib mir einen minimalen Denkanstoss auf Schweizerdeutsch, damit ich selbst auf den nächsten Schritt komme.";
-
-                // Wir verpacken Text und Bild in ein sauberes HTML-Paket, das jeder Browser versteht
-                const htmlCode = `<p>${systemPrompt}</p><br><img src="${dataUrl}" alt="Rechenweg">`;
-                
-                const blobHtml = new Blob([htmlCode], { type: 'text/html' });
-                const blobText = new Blob([systemPrompt + "\n[Bild angehängt]"], { type: 'text/plain' });
-
-                const item = new ClipboardItem({
-                    'text/html': blobHtml,
-                    'text/plain': blobText
-                });
-                
-                await navigator.clipboard.write([item]);
-                
-                // Erfolg anzeigen
-                const status = document.getElementById('statusMessage');
-                status.style.display = 'block';
-                setTimeout(() => { status.style.display = 'none'; }, 3000);
-
+                canvas.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    await navigator.clipboard.write([item]);
+                    showStatus('statusImage');
+                }, 'image/png');
             } catch (err) {
-                console.error(err);
-                alert('Fehler beim Kopieren. Bitte stelle sicher, dass die Seite über "https" aufgerufen wird (GitHub Pages macht das automatisch).');
+                alert('Fehler beim Kopieren des Bildes. Bitte https:// verwenden.');
             }
+        }
+
+        function showStatus(id) {
+            const el = document.getElementById(id);
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
         }
     </script>
 </body>
