@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v5</title>
+    <title>Sokratisches Rechenjournal v6</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -18,42 +18,41 @@
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             background-color: var(--bg);
             margin: 0;
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
         }
 
-        /* Kompakte Top-Bar für Anleitung und Buttons */
+        /* Kompakte Top-Bar */
         .top-bar {
             background: white;
             border-radius: 6px;
-            padding: 10px 15px;
+            padding: 8px 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 10px;
+            gap: 15px;
+            margin-bottom: 8px;
         }
 
         .info-text {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--neutral);
             line-height: 1.4;
             margin: 0;
-            max-width: 45%;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
         .btn {
-            padding: 8px 14px;
+            padding: 8px 12px;
             border: none;
             border-radius: 4px;
             font-weight: 600;
@@ -63,6 +62,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .btn-step1 { background: var(--secondary); color: white; }
@@ -77,6 +77,9 @@
         .btn-tool { background: #f3f2f1; color: var(--neutral); border: 1px solid #d2d0ce; }
         .btn-tool.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+        .btn-ki { background: #f3f2f1; color: #4b0082; border: 1px solid #b19ffb; font-weight: bold; }
+        .btn-ki:hover { background: #e6e0fa; }
+
         .file-input-wrapper {
             position: relative;
             overflow: hidden;
@@ -86,33 +89,68 @@
             position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;
         }
 
-        /* Hauptarbeitsbereich */
+        /* Split-Arbeitsbereich */
         .main-workspace {
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #edebe9;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 10px;
             display: flex;
-            flex-direction: column;
+            gap: 10px;
             flex: 1;
             min-height: 0;
         }
 
-        .editor-toolbar {
+        .panel {
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #edebe9;
+            padding: 10px;
             display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* Linkes Panel: Texteingabe für Schüler ohne Stift */
+        .text-panel {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        /* Rechtes Panel: Zeichnen für Schüler mit Stift */
+        .canvas-panel {
+            flex: 2;
+        }
+
+        .panel-title {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .text-input {
+        .editor-toolbar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .textarea-input {
             flex: 1;
-            padding: 8px 12px;
+            width: 100%;
+            padding: 10px;
             border: 1px solid #d2d0ce;
             border-radius: 4px;
             font-size: 14px;
+            font-family: inherit;
+            resize: none;
             box-sizing: border-box;
+            background-color: #faf9f8;
+        }
+        .textarea-input:focus {
+            background-color: #ffffff;
+            outline: 1px solid var(--secondary);
         }
 
         .canvas-container {
@@ -149,43 +187,63 @@
 </head>
 <body>
 
+    <!-- TOP-BAR: Geteilte Buttons -->
     <div class="top-bar">
         <p class="info-text">
-            <strong>🤖 Sokratischer KI-Assistent v5.0</strong><br>
-            Nutze den Split-Screen. 1. Text oder Aufgabe eingeben $\rightarrow$ <strong>Schritt 1</strong> kopieren und in KI einfügen. 2. Handschrift zeichnen $\rightarrow$ <strong>Schritt 2</strong> kopieren und einfügen.
+            <strong>📐 Sokratisches Rechenjournal v6.0</strong> | 
+            Nutze entweder die ⌨️ Texteingabe oder das ✏️ Zeichnen. Danach die Schritte nacheinander in die KI einfügen.
         </p>
         
         <div class="action-buttons">
             <button class="btn btn-step1" onclick="copyTextPrompt()">
-                <span>1. Befehl kopieren</span> 📋
+                <span>1. Befehl & Text kopieren</span> 📋
             </button>
             <button class="btn btn-step2" onclick="copyImageOnly()">
                 <span>2. Rechenweg kopieren</span> 🖼️
             </button>
+            <button class="btn btn-ki" onclick="openKIDirected()">
+                <span>🤖 KI-Fenster andocken</span> ↗️
+            </button>
         </div>
     </div>
     
+    <!-- HAUPTBEREICH IN ZWEI SPALTEN -->
     <div class="main-workspace">
-        <div class="editor-toolbar">
-            <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
-            <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
+        
+        <!-- LINKE SPALTE: Für Lernende OHNE Stift -->
+        <div class="panel text-panel">
+            <div class="panel-title">
+                <span>⌨️ Möglichkeit A: Lösen mit Tastatur</span>
+                <span style="font-weight: normal; font-size: 11px; color: #605e5c;">Ideal ohne Stift</span>
+            </div>
+            <textarea id="keyboardInput" class="textarea-input" placeholder="Tippe hier deinen Rechenweg, deine Zwischenschritte oder deine Frage ein, falls du keinen digitalen Stift benutzt..."></textarea>
+        </div>
+        
+        <!-- RECHTE SPALTE: Für Lernende MIT Stift -->
+        <div class="panel canvas-panel">
+            <div class="panel-title">
+                <span>✏️ Möglichkeit B: Lösen mit digitalem Stift & Bild</span>
+            </div>
             
-            <div class="file-input-wrapper">
-                <button class="btn btn-tool">🖼️ Aufgabe laden</button>
-                <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
+            <div class="editor-toolbar">
+                <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
+                <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
+                
+                <div class="file-input-wrapper">
+                    <button class="btn btn-tool">🖼️ Aufgabe als Hintergrund laden</button>
+                    <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+                
+                <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Alles zurücksetzen</button>
             </div>
 
-            <input type="text" id="keyboardInput" class="text-input" placeholder="Optional: Schreibe hier eine zusätzliche Frage oder Notiz per Tastatur...">
-            
-            <button class="btn btn-clear" onclick="clearCanvas()">Alles löschen</button>
-        </div>
-
-        <div class="canvas-container" id="canvas-wrapper">
-            <canvas id="paintCanvas"></canvas>
+            <div class="canvas-container" id="canvas-wrapper">
+                <canvas id="paintCanvas"></canvas>
+            </div>
         </div>
     </div>
 
-    <div class="status-toast" id="statusToast">Inhalt erfolgreich kopiert!</div>
+    <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
 
     <script>
         const canvas = document.getElementById('paintCanvas');
@@ -193,7 +251,7 @@
         const wrapper = document.getElementById('canvas-wrapper');
         let drawing = false;
         let bgImage = null;
-        let currentTool = 'pencil'; // 'pencil' oder 'eraser'
+        let currentTool = 'pencil';
 
         function initCanvas() {
             canvas.width = wrapper.offsetWidth;
@@ -202,11 +260,9 @@
         }
 
         function redrawEverything() {
-            // Hintergrund weiss
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Karos zeichnen
             ctx.strokeStyle = "#e5e5e5";
             ctx.lineWidth = 1;
             const gridSize = 25;
@@ -217,16 +273,14 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
-            // Hintergrundbild falls vorhanden
             if (bgImage) {
-                const maxW = canvas.width * 0.7;
-                const maxH = canvas.height * 0.35;
+                const maxW = canvas.width * 0.8;
+                const maxH = canvas.height * 0.4;
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
             }
 
-            // Stift-Modus wiederherstellen
             updateStyles();
         }
 
@@ -241,12 +295,9 @@
             if (currentTool === 'pencil') {
                 ctx.strokeStyle = '#111111';
                 ctx.lineWidth = 2.5;
-                // Verhindert Artefakte beim schnellen Zeichnen
-                ctx.globalCompositeOperation = 'source-over'; 
             } else {
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 30; // Breiterer Strahl zum komfortablen Radieren
-                ctx.globalCompositeOperation = 'source-over'; // Überschreibt die gezeichnete Linie einfach mit Weiss
+                ctx.lineWidth = 30;
             }
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -278,7 +329,6 @@
             const coord = getCoordinates(e);
             ctx.beginPath();
             ctx.moveTo(coord.x, coord.y);
-            // Radierer soll beim Antippen sofort weisse Punkte setzen
             if (currentTool === 'eraser') {
                 ctx.lineTo(coord.x, coord.y);
                 ctx.stroke();
@@ -312,45 +362,56 @@
             redrawEverything();
         }
 
-        const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild. Es enthält die Aufgabenstellung und/oder meinen aktuellen handschriftlichen Rechenweg. Analysiere das Bild Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
+        // Sokratischer Hauptprompt (Kurz, prägnant, schriftdeutsch)
+        const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
-        // Schritt 1: Text kopieren (Kombiniert System-Prompt + Tastatur-Eingabe)
+        // Schritt 1: Text kopieren (Nimmt den Text aus der Textarea mit)
         async function copyTextPrompt() {
             try {
                 const userText = document.getElementById('keyboardInput').value.trim();
                 let fullPrompt = baseSystemPrompt;
                 
                 if (userText.length > 0) {
-                    fullPrompt += "\n\nHier ist eine zusätzliche Frage/Anmerkung von mir zu dieser Aufgabe: " + userText;
+                    fullPrompt += "\n\nHier ist mein getippter Rechenweg bzw. meine Frage dazu:\n" + userText;
                 }
                 
                 await navigator.clipboard.writeText(fullPrompt);
-                showToast("✓ Sokratischer Befehl kopiert!");
+                showToast("✓ Text & Systembefehl kopiert!");
             } catch (err) {
-                alert('Fehler beim Kopieren des Textes.');
+                alert('Fehler beim Kopieren.');
             }
         }
 
-        // Schritt 2: Bild kopieren (Inklusive Karos, geladenem Bild, Handschrift und Radierungen)
+        // Schritt 2: Zeichnung kopieren
         async function copyImageOnly() {
             try {
-                // Falls radiert wurde, müssen wir sicherstellen, dass das Karomuster nicht unter dem Weiss verschwindet, wenn es exportiert wird.
-                // Da OneNote und ChatGPT PNGs mit weissem Hintergrund perfekt lesen, funktioniert die 'source-over' Methode tadellos.
                 canvas.toBlob(async (blob) => {
                     const item = new ClipboardItem({ 'image/png': blob });
                     await navigator.clipboard.write([item]);
-                    showToast("✓ Rechenweg kopiert!");
+                    showToast("✓ Rechenweg als Bild kopiert!");
                 }, 'image/png');
             } catch (err) {
-                alert('Fehler beim Kopieren des Bildes. Bitte https:// verwenden.');
+                alert('Fehler beim Kopieren des Bildes.');
             }
+        }
+
+        // Automatisches "Andocken" eines KI-Fensters direkt neben der App
+        function openKIDirected() {
+            const width = 550;
+            const height = window.screen.availHeight - 80;
+            const left = window.screen.availWidth - width;
+            
+            // Ändern Sie hier die URL, falls Ihre Schule eine spezifische KI-Plattform nutzt
+            const kiUrl = "https://chatgpt.com"; 
+            
+            window.open(kiUrl, 'ki_popup', `width=${width},height=${height},left=${left},top=0,menubar=no,toolbar=no,location=no,status=no`);
         }
 
         function showToast(msg) {
             const toast = document.getElementById('statusToast');
             toast.innerText = msg;
             toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
         }
     </script>
 </body>
