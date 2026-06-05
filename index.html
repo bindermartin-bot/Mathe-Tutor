@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratischer KI-Assistent v3</title>
+    <title>Sokratischer KI-Assistent v4</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -72,6 +72,22 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
         }
 
         .btn {
@@ -87,6 +103,9 @@
         .btn-clear { background: #fde7e9; color: var(--danger); }
         .btn-clear:hover { background: #fcd2d6; }
         
+        .btn-upload { background: #eaeaea; color: #323130; border: 1px solid #a19f9d; }
+        .btn-upload:hover { background: #dadada; }
+
         .btn-step {
             color: white;
             font-size: 15px;
@@ -111,9 +130,7 @@
             border: 1px solid #a19f9d;
             border-radius: 4px;
             background-color: #ffffff;
-            background-size: 25px 25px;
-            background-image: linear-gradient(to right, #f3f2f1 1px, transparent 1px),
-                              linear-gradient(to bottom, #f3f2f1 1px, transparent 1px);
+            overflow: hidden;
         }
 
         canvas {
@@ -144,27 +161,35 @@
 </head>
 <body>
 
-    <h1>📐 Sokratisches Rechenjournal <span style="font-size: 12px; color: #605e5c;">v3.0 (Multi-Copy)</span></h1>
+    <h1>📐 Sokratisches Rechenjournal <span style="font-size: 12px; color: #605e5c;">v4.0 (Bild-Inquiry)</span></h1>
     
     <div class="container">
+        <!-- Links: Arbeitsbereich -->
         <div class="panel left-panel">
             <input type="text" class="meta-input" placeholder="Welche Aufgabe löst du gerade?">
             <div class="toolbar">
                 <button class="btn btn-clear" onclick="clearCanvas()">Feld löschen</button>
-                <span style="color: #605e5c; font-size: 13px;">✍️ Nutze deinen Stift für den Lösungsweg.</span>
+                
+                <div class="file-input-wrapper">
+                    <button class="btn btn-upload">🖼️ Aufgabenstellung (Bild) laden</button>
+                    <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+                
+                <span style="color: #605e5c; font-size: 13px; margin-left: auto;">✍️ Nutze deinen Stift für den Lösungsweg.</span>
             </div>
             <div class="canvas-container" id="canvas-wrapper">
                 <canvas id="paintCanvas"></canvas>
             </div>
         </div>
         
+        <!-- Rechts: Workflow & Kopieren -->
         <div class="panel right-panel">
             <div class="instructions">
                 <h2 style="margin-top:0; color: var(--primary); font-size: 18px;">🤖 2-Schritt-Kopierhilfe</h2>
-                <p>Weil ChatGPT/Gemini Text und Bild getrennt erwarten, nutzen wir zwei Klicks:</p>
+                <p>Nutze die Anwendung im Split-Screen neben deinem ChatGPT, Gemini oder Copilot.</p>
                 
                 <ol style="padding-left: 20px; margin-bottom: 25px;">
-                    <li>Löse die Aufgabe links.</li>
+                    <li>Lade optional ein Bild der Aufgabe hoch und rechne handschriftlich auf dem Feld.</li>
                     <li>Klicke auf <strong>Schritt 1</strong>, wechsle zur KI und drücke <strong>Strg + V</strong>.</li>
                     <li>Klicke auf <strong>Schritt 2</strong>, wechsle zur KI und drücke nochmals <strong>Strg + V</strong>.</li>
                 </ol>
@@ -177,7 +202,7 @@
                 <div class="status-msg" id="statusText">✓ Befehl kopiert! In KI einfügen.</div>
 
                 <button class="btn btn-step btn-step2" onclick="copyImageOnly()">
-                    <span>2. Rechenweg als Bild kopieren</span> <span>🖼️</span>
+                    <span>2. Rechenweg & Aufgabe kopieren</span> <span>🖼️</span>
                 </button>
                 <div class="status-msg" id="statusImage">✓ Bild kopiert! In KI einfügen.</div>
             </div>
@@ -189,10 +214,44 @@
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
         let drawing = false;
+        let bgImage = null; // Speichert das hochgeladene Aufgaben-Bild
 
         function initCanvas() {
             canvas.width = wrapper.offsetWidth;
             canvas.height = wrapper.offsetHeight;
+            redrawEverything();
+        }
+
+        // Zeichnet den Hintergrund (Karos + eventuell hochgeladenes Bild) neu
+        function redrawEverything() {
+            // 1. Hintergrund weiss färben
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Mathematische Karos zeichnen
+            ctx.strokeStyle = "#e5e5e5";
+            ctx.lineWidth = 1;
+            const gridSize = 25;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // 3. Wenn vorhanden, das hochgeladene Bild einzeichnen (skaliert oben links)
+            if (bgImage) {
+                const maxW = canvas.width * 0.8; // Maximal 80% der Breite einnehmen
+                const maxH = canvas.height * 0.4; // Maximal 40% der Höhe einnehmen
+                let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
+                if (scale > 1) scale = 1; // Nicht künstlich vergrössern
+
+                const imgW = bgImage.width * scale;
+                const imgH = bgImage.height * scale;
+                ctx.drawImage(bgImage, 10, 10, imgW, imgH);
+            }
+
+            // Stift-Konfiguration zurücksetzen für das Weiterschreiben
             ctx.strokeStyle = '#111111';
             ctx.lineWidth = 2.5;
             ctx.lineCap = 'round';
@@ -203,6 +262,20 @@
         window.addEventListener('resize', initCanvas);
         setTimeout(initCanvas, 500);
 
+        // Bildverarbeitung bei Upload
+        function handleImageUpload(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                bgImage = new Image();
+                bgImage.onload = function() {
+                    redrawEverything();
+                }
+                bgImage.src = event.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        // Koordinaten-Erkennung
         function getCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -226,7 +299,7 @@
             e.preventDefault();
         }
 
-        function stopDrawing() { drawing = false; ctx.beginPath(); }
+        function stopDrawing() { drawing = false; }
 
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
@@ -236,11 +309,17 @@
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
 
-        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function clearCanvas() {
+            bgImage = null;
+            document.getElementById('imageLoader').value = ""; // Input zurücksetzen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            redrawEverything();
+        }
 
-        const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild meines aktuellen Rechenwegs. Analysiere diesen Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, stelle mir eine präzise, motivierende Frage oder gib mir einen minimalen Denkanstoss auf Schriftdeutsch, damit ich selbst auf den nächsten Schritt komme.";
+        // NEUER PROMPT: Schriftdeutsch, prägnant und kurz gehalten
+        const systemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier ein Bild. Es enthält die Aufgabenstellung und/oder meinen aktuellen handschriftlichen Rechenweg. Analysiere das Bild Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
-        // Schritt 1: Reinen Text kopieren
+        // Schritt 1: Text kopieren
         async function copyTextPrompt() {
             try {
                 await navigator.clipboard.writeText(systemPrompt);
@@ -250,7 +329,7 @@
             }
         }
 
-        // Schritt 2: Echtes Bild (Datei) kopieren
+        // Schritt 2: Bild kopieren (Inklusive Karos, geladenem Bild und Handschrift)
         async function copyImageOnly() {
             try {
                 canvas.toBlob(async (blob) => {
