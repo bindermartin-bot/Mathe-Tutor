@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v6</title>
+    <title>Sokratisches Rechenjournal v7</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -23,7 +23,47 @@
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
+            overflow: hidden;
         }
+
+        /* Startbildschirm für die Modus-Auswahl */
+        .welcome-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            gap: 20px;
+        }
+
+        .mode-card-container {
+            display: flex;
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .mode-card {
+            flex: 1;
+            background: white;
+            border: 2px solid #d2d0ce;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .mode-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .mode-card h2 { margin-top: 0; color: var(--primary); }
 
         /* Kompakte Top-Bar */
         .top-bar {
@@ -38,21 +78,11 @@
             margin-bottom: 8px;
         }
 
-        .info-text {
-            font-size: 12px;
-            color: var(--neutral);
-            line-height: 1.4;
-            margin: 0;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+        .info-text { font-size: 12px; color: var(--neutral); line-height: 1.4; margin: 0; }
+        .action-buttons { display: flex; gap: 6px; align-items: center; }
 
         .btn {
-            padding: 8px 12px;
+            padding: 6px 12px;
             border: none;
             border-radius: 4px;
             font-weight: 600;
@@ -67,178 +97,105 @@
 
         .btn-step1 { background: var(--secondary); color: white; }
         .btn-step1:hover { background: #005a9e; }
-        
         .btn-step2 { background: var(--success); color: white; }
         .btn-step2:hover { background: #0b592e; }
-
         .btn-clear { background: #fde7e9; color: var(--danger); }
         .btn-clear:hover { background: #fcd2d6; }
-        
         .btn-tool { background: #f3f2f1; color: var(--neutral); border: 1px solid #d2d0ce; }
         .btn-tool.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .btn-ki-select { background: #ffffff; color: #4b0082; border: 1px solid #b19ffb; font-size: 11px; padding: 4px 8px; }
+        .btn-ki-select:hover { background: #e6e0fa; }
 
-        .btn-ki { background: #f3f2f1; color: #4b0082; border: 1px solid #b19ffb; font-weight: bold; }
-        .btn-ki:hover { background: #e6e0fa; }
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
 
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-        .file-input-wrapper input[type=file] {
-            position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;
-        }
+        /* Hauptarbeitsbereich */
+        .main-workspace { display: flex; gap: 10px; flex: 1; min-height: 0; }
+        .panel { background: white; border-radius: 6px; border: 1px solid #edebe9; padding: 10px; display: flex; flex-direction: column; flex: 1; min-height: 0; box-sizing: border-box; }
+        
+        /* Dynamische Anzeige der Modi */
+        .text-mode-active .canvas-panel { display: none; }
+        .canvas-mode-active .text-panel { display: none; }
 
-        /* Split-Arbeitsbereich */
-        .main-workspace {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            min-height: 0;
-        }
+        .textarea-input { flex: 1; width: 100%; padding: 15px; border: 1px solid #d2d0ce; border-radius: 4px; font-size: 15px; font-family: inherit; resize: none; box-sizing: border-box; background-color: #faf9f8; }
+        .textarea-input:focus { background-color: #ffffff; outline: 1px solid var(--secondary); }
 
-        .panel {
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #edebe9;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-        }
+        /* Scrollbarer Zeichenbereich */
+        .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; }
+        .canvas-container { position: relative; width: 100%; height: 300vh; } /* 300vh erlaubt dreifache Bildschirmhöhe zum Scrollen */
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
-        /* Linkes Panel: Texteingabe für Schüler ohne Stift */
-        .text-panel {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        /* Rechtes Panel: Zeichnen für Schüler mit Stift */
-        .canvas-panel {
-            flex: 2;
-        }
-
-        .panel-title {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .editor-toolbar {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .textarea-input {
-            flex: 1;
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d2d0ce;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: none;
-            box-sizing: border-box;
-            background-color: #faf9f8;
-        }
-        .textarea-input:focus {
-            background-color: #ffffff;
-            outline: 1px solid var(--secondary);
-        }
-
-        .canvas-container {
-            flex: 1;
-            position: relative;
-            border: 1px solid #a19f9d;
-            border-radius: 4px;
-            background-color: #ffffff;
-            overflow: hidden;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            cursor: crosshair;
-            touch-action: none;
-        }
-
-        .status-toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #107c41;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 13px;
-            display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 100;
-        }
+        .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; }
     </style>
 </head>
-<body>
+<body class="canvas-mode-active"> <!-- Standardmässig auf Stift, wird über Welcome Screen gesteuert -->
 
-    <!-- TOP-BAR: Geteilte Buttons -->
+    <!-- SEITE A: Modus-Auswahl beim ersten Aufruf -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <h1 style="color: var(--primary); margin: 0;">📐 Willkommen im Sokratischen Rechenjournal</h1>
+        <p style="color: var(--neutral); margin-top: 0;">Wie möchtest du deine Aufgabe heute lösen?</p>
+        <div class="mode-card-container">
+            <div class="mode-card" onclick="selectMode('text')">
+                <h2>⌨️ Tastatur-Modus</h2>
+                <p>Ich habe keinen digitalen Stift und möchte meinen Rechenweg oder meine Fragen eintippen.</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('canvas')">
+                <h2>✏️ Stift-Modus</h2>
+                <p>Ich besitze einen Eingabestift und möchte mathematische Skizzen und Lösungswege von Hand zeichnen.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEITE B: Eigentliche Applikation -->
     <div class="top-bar">
         <p class="info-text">
-            <strong>📐 Sokratisches Rechenjournal v6.0</strong> | 
-            Nutze entweder die ⌨️ Texteingabe oder das ✏️ Zeichnen. Danach die Schritte nacheinander in die KI einfügen.
+            <strong>Sokratischer KI-Assistent v7.0</strong> | 
+            Kopiere nacheinander Schritt 1 (und ggf. Schritt 2) in den KI-Chat.
         </p>
         
         <div class="action-buttons">
-            <button class="btn btn-step1" onclick="copyTextPrompt()">
-                <span>1. Befehl & Text kopieren</span> 📋
-            </button>
-            <button class="btn btn-step2" onclick="copyImageOnly()">
-                <span>2. Rechenweg kopieren</span> 🖼️
-            </button>
-            <button class="btn btn-ki" onclick="openKIDirected()">
-                <span>🤖 KI-Fenster andocken</span> ↗️
-            </button>
+            <button class="btn btn-tool" style="font-size: 11px;" onclick="showWelcomeScreen()">🔄 Modus wechseln</button>
+            <button class="btn btn-step1" onclick="copyTextPrompt()"><span>1. Befehl kopieren</span> 📋</button>
+            <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Rechenweg kopieren</span> 🖼️</button>
+            
+            <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
+                <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI ANDOCKEN:</span>
+                <div style="display:flex; gap: 3px;">
+                    <button class="btn btn-ki-select" onclick="openKIAndResize('https://chatgpt.com')">ChatGPT</button>
+                    <button class="btn btn-ki-select" onclick="openKIAndResize('https://gemini.google.com')">Gemini</button>
+                    <button class="btn btn-ki-select" onclick="openKIAndResize('https://copilot.microsoft.com')">Copilot</button>
+                </div>
+            </div>
         </div>
     </div>
     
-    <!-- HAUPTBEREICH IN ZWEI SPALTEN -->
     <div class="main-workspace">
-        
-        <!-- LINKE SPALTE: Für Lernende OHNE Stift -->
+        <!-- MODUS TASTATUR: Nur sichtbar wenn Text-Modus gewählt -->
         <div class="panel text-panel">
-            <div class="panel-title">
-                <span>⌨️ Möglichkeit A: Lösen mit Tastatur</span>
-                <span style="font-weight: normal; font-size: 11px; color: #605e5c;">Ideal ohne Stift</span>
-            </div>
-            <textarea id="keyboardInput" class="textarea-input" placeholder="Tippe hier deinen Rechenweg, deine Zwischenschritte oder deine Frage ein, falls du keinen digitalen Stift benutzt..."></textarea>
+            <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary);">⌨️ Dein Rechenweg (Tastatureingabe)</div>
+            <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf. Nutze normale Zeichen wie * für Multiplikation, / für Brüche und ^ für Potenzen (z.B. x^2 + 3x = 4)..."></textarea>
         </div>
         
-        <!-- RECHTE SPALTE: Für Lernende MIT Stift -->
+        <!-- MODUS STIFT: Nur sichtbar wenn Stift-Modus gewählt -->
         <div class="panel canvas-panel">
-            <div class="panel-title">
-                <span>✏️ Möglichkeit B: Lösen mit digitalem Stift & Bild</span>
-            </div>
-            
             <div class="editor-toolbar">
                 <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
                 <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
                 
                 <div class="file-input-wrapper">
-                    <button class="btn btn-tool">🖼️ Aufgabe als Hintergrund laden</button>
+                    <button class="btn btn-tool">🖼️ Aufgabe laden</button>
                     <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
                 </div>
-                
-                <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Alles zurücksetzen</button>
+                <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Scrollbar! Nutze zwei Finger zum Schieben.</span>
+                <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Feld löschen</button>
             </div>
 
-            <div class="canvas-container" id="canvas-wrapper">
-                <canvas id="paintCanvas"></canvas>
+            <!-- Scrollbarer Container für das Riesen-Arbeitsblatt -->
+            <div class="scroll-wrapper">
+                <div class="canvas-container" id="canvas-wrapper">
+                    <canvas id="paintCanvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -253,9 +210,25 @@
         let bgImage = null;
         let currentTool = 'pencil';
 
+        // Modus-Steuerung
+        function selectMode(mode) {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.body.className = mode === 'text' ? 'text-mode-active' : 'canvas-mode-active';
+            
+            // Sichtbarkeit des Bild-Kopieren-Buttons steuern
+            document.querySelector('.id-canvas-only').style.display = mode === 'text' ? 'none' : 'flex';
+            
+            setTimeout(initCanvas, 100);
+        }
+
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'flex';
+        }
+
         function initCanvas() {
+            // Berechnet die Breite des Containers, setzt aber eine feste Riesen-Höhe fürs Scrollen
             canvas.width = wrapper.offsetWidth;
-            canvas.height = wrapper.offsetHeight;
+            canvas.height = wrapper.offsetHeight; 
             redrawEverything();
         }
 
@@ -263,6 +236,7 @@
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Unendliche Karos zeichnen
             ctx.strokeStyle = "#e5e5e5";
             ctx.lineWidth = 1;
             const gridSize = 25;
@@ -273,14 +247,14 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
+            // Aufgabe einzeichnen (Bleibt fixiert am oberen Rand des Canvas)
             if (bgImage) {
                 const maxW = canvas.width * 0.8;
-                const maxH = canvas.height * 0.4;
+                const maxH = 400; // Maximale Höhe im oberen Bereich
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
             }
-
             updateStyles();
         }
 
@@ -297,15 +271,13 @@
                 ctx.lineWidth = 2.5;
             } else {
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 30;
+                ctx.lineWidth = 35;
             }
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
 
-        window.addEventListener('load', initCanvas);
         window.addEventListener('resize', initCanvas);
-        setTimeout(initCanvas, 500);
 
         function handleImageUpload(e) {
             const reader = new FileReader();
@@ -319,25 +291,31 @@
 
         function getCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
+            // Wichtig: window.scrollY und scrollLeft des Wrapper-Elements einbeziehen wegen Scroll-Verschiebung
+            const scrollContainer = document.querySelector('.scroll-wrapper');
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return { x: clientX - rect.left, y: clientY - rect.top };
+            return { 
+                x: clientX - rect.left, 
+                y: clientY - rect.top
+            };
         }
 
         function startDrawing(e) {
+            // Verhindert Zeichnen beim Scrollen mit 2 Fingern auf Tablets
+            if (e.touches && e.touches.length > 1) { drawing = false; return; }
+            
             drawing = true;
             const coord = getCoordinates(e);
             ctx.beginPath();
             ctx.moveTo(coord.x, coord.y);
-            if (currentTool === 'eraser') {
-                ctx.lineTo(coord.x, coord.y);
-                ctx.stroke();
-            }
+            if (currentTool === 'eraser') { ctx.lineTo(coord.x, coord.y); ctx.stroke(); }
             e.preventDefault();
         }
 
         function draw(e) {
             if (!drawing) return;
+            if (e.touches && e.touches.length > 1) return; // Multitouch ignorieren fürs Zeichnen
             const coord = getCoordinates(e);
             ctx.lineTo(coord.x, coord.y);
             ctx.stroke();
@@ -362,49 +340,49 @@
             redrawEverything();
         }
 
-        // Sokratischer Hauptprompt (Kurz, prägnant, schriftdeutsch)
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
-        // Schritt 1: Text kopieren (Nimmt den Text aus der Textarea mit)
         async function copyTextPrompt() {
             try {
                 const userText = document.getElementById('keyboardInput').value.trim();
                 let fullPrompt = baseSystemPrompt;
-                
                 if (userText.length > 0) {
                     fullPrompt += "\n\nHier ist mein getippter Rechenweg bzw. meine Frage dazu:\n" + userText;
                 }
-                
                 await navigator.clipboard.writeText(fullPrompt);
-                showToast("✓ Text & Systembefehl kopiert!");
-            } catch (err) {
-                alert('Fehler beim Kopieren.');
-            }
+                showToast("✓ Sokratischer Befehl kopiert!");
+            } catch (err) { alert('Fehler beim Kopieren.'); }
         }
 
-        // Schritt 2: Zeichnung kopieren
         async function copyImageOnly() {
             try {
+                // Wir exportieren nur den aktiven Bereich des Canvas, um weissen Leerraum am Ende des 300vh-Blattes zu minimieren
                 canvas.toBlob(async (blob) => {
                     const item = new ClipboardItem({ 'image/png': blob });
                     await navigator.clipboard.write([item]);
                     showToast("✓ Rechenweg als Bild kopiert!");
                 }, 'image/png');
-            } catch (err) {
-                alert('Fehler beim Kopieren des Bildes.');
-            }
+            } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // Automatisches "Andocken" eines KI-Fensters direkt neben der App
-        function openKIDirected() {
-            const width = 550;
-            const height = window.screen.availHeight - 80;
-            const left = window.screen.availWidth - width;
+        // INTELLIGENTES SPLIT-SCREEN LAYOUT PER KLICK
+        function openKIAndResize(kiUrl) {
+            const totalWidth = window.screen.availWidth;
+            const totalHeight = window.screen.availHeight;
             
-            // Ändern Sie hier die URL, falls Ihre Schule eine spezifische KI-Plattform nutzt
-            const kiUrl = "https://chatgpt.com"; 
-            
-            window.open(kiUrl, 'ki_popup', `width=${width},height=${height},left=${left},top=0,menubar=no,toolbar=no,location=no,status=no`);
+            const kiWidth = 580; // Perfekte Breite für die KI-Seitenleiste
+            const journalWidth = totalWidth - kiWidth;
+
+            // 1. Verkleinert das aktuelle Browserfenster und schiebt es nach links
+            window.moveTo(0, 0);
+            window.resizeTo(journalWidth, totalHeight);
+
+            // 2. Öffnet das gewählte KI-Fenster exakt angedockt auf der rechten Seite
+            window.open(
+                kiUrl, 
+                'ki_docked_popup', 
+                `width=${kiWidth},height=${totalHeight},left=${journalWidth},top=0,menubar=no,toolbar=no,location=no,status=no`
+            );
         }
 
         function showToast(msg) {
