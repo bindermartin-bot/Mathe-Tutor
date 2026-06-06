@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.4</title>
+    <title>Sokratisches Rechenjournal v8.5</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -33,7 +33,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Rechter Freiraum für das Always-on-Top Fenster */
+        /* Rechter Freiraum, um Platz für das Popup zu schaffen */
         .ki-placeholder-space {
             width: 0;
             background: #faf9f8;
@@ -168,7 +168,7 @@
         .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; }
     </style>
 </head>
-<body class="canvas-mode-active">
+<body class="canvas-mode-active" onmousedown="keepKIInForeground()" ontouchstart="keepKIInForeground()">
 
     <div class="welcome-screen" id="welcomeScreen">
         <h1 style="color: var(--primary); margin: 0;">📐 Sokratisches Rechenjournal</h1>
@@ -188,7 +188,7 @@
     <div class="app-container">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.4</strong> | Einmal kopieren, einmal in der KI einfügen.
+                <strong>Sokratischer KI-Assistent v8.5</strong> | Einmal kopieren, einmal in der KI einfügen.
             </p>
             
             <div class="action-buttons">
@@ -199,9 +199,9 @@
                 <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
                     <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI IM VORDERGRUND STARTEN:</span>
                     <div style="display:flex; gap: 3px;">
-                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openAlwaysOnTopKI('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
-                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openAlwaysOnTopKI('https://gemini.google.com', 'btn-gemini')">Gemini</button>
-                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openAlwaysOnTopKI('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openSmartKIPopup('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
+                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openSmartKIPopup('https://gemini.google.com', 'btn-gemini')">Gemini</button>
+                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openSmartKIPopup('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
                     </div>
                 </div>
             </div>
@@ -248,12 +248,12 @@
 
     <div class="ki-placeholder-space" id="kiPlaceholderSpace">
         <div class="popup-info-box">
-            <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 14px;">📌 KI-Tutor fixiert</h3>
+            <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 14px;">📌 KI-Tutor geöffnet</h3>
             <p style="font-size: 12px; color: var(--neutral); line-height: 1.4; margin: 0; text-align: left;">
-                Das KI-Fenster ist jetzt dauerhaft im Vordergrund fixiert.<br><br>
-                <strong>Tipp:</strong> Du kannst das schwebende Fenster genau über diese graue Fläche schieben. So hast du links Platz zum Arbeiten!
+                Das originale KI-Fenster ist jetzt als echtes Popup aktiv.<br><br>
+                <strong>Vordergrund-Schutz:</strong> Wenn das Popup hinter das Journal rutscht, klicke einfach einmal kurz irgendwo ins Journal. Das KI-Fenster springt sofort wieder nach vorne!
             </p>
-            <button class="btn btn-tool" style="margin-top: 15px; font-size: 11px; width: 100%; justify-content: center;" onclick="closeAlwaysOnTopSpace()">Journal maximieren 🔲</button>
+            <button class="btn btn-tool" style="margin-top: 15px; font-size: 11px; width: 100%; justify-content: center;" onclick="closeKIPopupSpace()">Journal maximieren 🔲</button>
         </div>
     </div>
 
@@ -268,7 +268,7 @@
         let textModeImageBlob = null;
         let currentTool = 'pencil';
         let currentActiveMode = 'canvas';
-        let pipWindowReference = null; // Referenz für das Always-on-Top Fenster
+        let nativePopupReference = null; // Referenz auf das echte KI-Popup
 
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
@@ -277,10 +277,6 @@
             document.getElementById('welcomeScreen').style.display = 'none';
             document.body.className = mode === 'text' ? 'text-mode-active' : 'canvas-mode-active';
             document.querySelector('.id-canvas-only').style.display = mode === 'text' ? 'none' : 'flex';
-            
-            const mainBtnSpan = document.querySelector('.btn-step1 span');
-            mainBtnSpan.innerText = "1. Alles kopieren";
-            
             setTimeout(initCanvas, 100);
         }
 
@@ -389,7 +385,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height); redrawEverything();
         }
 
-        // KORRIGIERTES KOPIEREN: System-Prompt wird in BEIDEN Modi mitgeliefert
         async function copyCombinedTextAndImage() {
             try {
                 const userText = document.getElementById('keyboardInput').value.trim();
@@ -405,11 +400,10 @@
                             'image/png': textModeImageBlob
                         });
                         await navigator.clipboard.write([item]);
-                        showToast("✓ Sokratischer Befehl, Text & Bild kopiert! Jetzt bei der KI einfügen.");
+                        showToast("✓ System-Befehl, Text & Bild kopiert!");
                         return;
                     }
                 } else {
-                    // Stiftmodus: Nur den Befehl kopieren (Handschriftfolgt in Schritt 2)
                     fullPrompt += "\n\nIch füge dir gleich im nächsten Schritt meine handschriftliche Skizze hinzu.";
                 }
 
@@ -428,8 +422,8 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // REVOLUTIONÄRE ALWAYS-ON-TOP FIXIERUNG (Picture-in-Picture)
-        async function openAlwaysOnTopKI(url, btnId) {
+        // DAS ECHTE POPUP DIREKT ANSTEUERN (Keine CSP/X-Frame-Blockade möglich)
+        function openSmartKIPopup(url, btnId) {
             const placeholder = document.getElementById('kiPlaceholderSpace');
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
             document.getElementById(btnId).classList.add('active-ki');
@@ -437,51 +431,39 @@
             placeholder.classList.add('active');
             setTimeout(initCanvas, 320);
 
-            // Prüfen, ob der Browser Document Picture-in-Picture unterstützt
-            if ('documentPictureInPicture' in window) {
-                if (pipWindowReference) pipWindowReference.close();
+            const popupW = 450; 
+            const popupH = window.screen.availHeight - 80;
+            const leftPos = window.screen.availWidth - popupW;
 
-                // Öffnet das vom OS geschützte Always-on-Top Fenster
-                pipWindowReference = await window.documentPictureInPicture.requestWindow({
-                    width: 430,
-                    height: window.screen.availHeight - 100
-                });
+            if (nativePopupReference && !nativePopupReference.closed) {
+                nativePopupReference.close();
+            }
 
-                // Styles in das neue Fenster injizieren
-                const style = pipWindowReference.document.createElement('style');
-                style.textContent = `
-                    body { margin: 0; padding: 0; font-family: sans-serif; background: #f3f2f1; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-                    .header { background: #4a154b; color: white; padding: 8px; font-size: 12px; font-weight: bold; text-align: center; }
-                    iframe { border: none; width: 100%; flex: 1; }
-                `;
-                pipWindowReference.document.head.appendChild(style);
+            // Öffnet die echte KI-Website nativ im Popup-Modus
+            nativePopupReference = window.open(
+                url, 
+                'real_ki_popup', 
+                `width=${popupW},height=${popupH},left=${leftPos},top=0,resizable=yes,scrollbars=yes,status=no`
+            );
+        }
 
-                // HTML-Inhalt des Fensters aufbauen
-                pipWindowReference.document.body.innerHTML = `
-                    <div class="header">📌 Sokratischer KI-Tutor (Im Vordergrund fixiert)</div>
-                    <iframe src="${url}"></iframe>
-                `;
-
-                // Falls der Nutzer das PiP-Fenster schließt, App zurücksetzen
-                pipWindowReference.addEventListener('unload', () => {
-                    closeAlwaysOnTopSpace();
-                });
-            } else {
-                // Ausfallsicherheit für ältere Browser/Firefox: Normales Popup
-                const popupW = 430; const popupH = window.screen.availHeight;
-                const leftPos = window.screen.availWidth - popupW;
-                if (pipWindowReference && !pipWindowReference.closed) pipWindowReference.close();
-                pipWindowReference = window.open(url, 'ki_fallback_popup', `width=${popupW},height=${popupH},left=${leftPos},top=0,resizable=yes,scrollbars=yes`);
+        // DER VORDERGRUND-TRICK: Holt das native Popup bei Klicks ins Journal sofort wieder hoch
+        function keepKIInForeground() {
+            if (nativePopupReference && !nativePopupReference.closed) {
+                // Ein extrem kurzer Timeout sorgt dafür, dass das Popup den Fokus behält, ohne die Eingabe im Journal zu blockieren
+                setTimeout(() => {
+                    nativePopupReference.focus();
+                }, 20);
             }
         }
 
-        function closeAlwaysOnTopSpace() {
+        function closeKIPopupSpace() {
             document.getElementById('kiPlaceholderSpace').classList.remove('active');
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
-            if (pipWindowReference) {
-                pipWindowReference.close();
-                pipWindowReference = null;
+            if (nativePopupReference && !nativePopupReference.closed) {
+                nativePopupReference.close();
             }
+            nativePopupReference = null;
             setTimeout(initCanvas, 320);
         }
 
