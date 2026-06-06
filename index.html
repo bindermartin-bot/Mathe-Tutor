@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.5</title>
+    <title>Sokratisches Rechenjournal v8.6</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -25,46 +25,54 @@
             overflow: hidden;
         }
 
+        /* Die App nimmt standardmässig 100% ein, schrumpft aber bei KI-Start exakt auf 50vw (halber Bildschirm) */
         .app-container {
             display: flex;
             flex-direction: column;
             flex: 1;
+            width: 100%;
             min-width: 0;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
         }
 
-        /* Rechter Freiraum, um Platz für das Popup zu schaffen */
-        .ki-placeholder-space {
+        .app-container.split-active {
+            flex: none;
+            width: calc(50vw - 16px);
+        }
+
+        /* Rechter Info-Bereich: Erscheint exakt auf der zweiten Bildschirmhälfte */
+        .ki-split-guide {
             width: 0;
-            background: #faf9f8;
+            background: #ffffff;
             border-left: 0 solid #d2d0ce;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
             overflow: hidden;
             padding: 0;
             text-align: center;
         }
 
-        .ki-placeholder-space.active {
-            width: 440px;
+        .ki-split-guide.active {
+            width: calc(50vw - 8px);
             border-left: 1px solid #d2d0ce;
             margin-left: 8px;
-            padding: 20px;
+            padding: 30px;
+            box-sizing: border-box;
         }
 
-        .popup-info-box {
-            background: #ffffff;
-            border: 1px solid #d2d0ce;
-            border-radius: 6px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            max-width: 360px;
+        .guide-box {
+            background: #f3f2f1;
+            border: 2px dashed var(--secondary);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+            max-width: 450px;
         }
 
-        /* Startbildschirm */
+        /* Startbildschirm für Modus-Auswahl */
         .welcome-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -145,7 +153,7 @@
         .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
         .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
 
-        /* Hauptarbeitsbereich */
+        /* Arbeitsbereich */
         .main-workspace { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .panel { background: white; border-radius: 6px; border: 1px solid #edebe9; padding: 10px; display: flex; flex-direction: column; flex: 1; min-height: 0; box-sizing: border-box; }
         
@@ -168,7 +176,7 @@
         .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; }
     </style>
 </head>
-<body class="canvas-mode-active" onmousedown="keepKIInForeground()" ontouchstart="keepKIInForeground()">
+<body class="canvas-mode-active">
 
     <div class="welcome-screen" id="welcomeScreen">
         <h1 style="color: var(--primary); margin: 0;">📐 Sokratisches Rechenjournal</h1>
@@ -185,10 +193,10 @@
         </div>
     </div>
 
-    <div class="app-container">
+    <div class="app-container" id="appContainer">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.5</strong> | Einmal kopieren, einmal in der KI einfügen.
+                <strong>Sokratischer KI-Assistent v8.6</strong> | Einmal kopieren, drüben einfügen.
             </p>
             
             <div class="action-buttons">
@@ -197,11 +205,11 @@
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
                 <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI IM VORDERGRUND STARTEN:</span>
+                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI IN NEUEM TAB ÖFFNEN:</span>
                     <div style="display:flex; gap: 3px;">
-                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openSmartKIPopup('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
-                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openSmartKIPopup('https://gemini.google.com', 'btn-gemini')">Gemini</button>
-                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openSmartKIPopup('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="executeSplitScreenLayout('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
+                        <button class="btn btn-ki-select" id="btn-gemini" onclick="executeSplitScreenLayout('https://gemini.google.com', 'btn-gemini')">Gemini</button>
+                        <button class="btn btn-ki-select" id="btn-copilot" onclick="executeSplitScreenLayout('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
                     </div>
                 </div>
             </div>
@@ -217,7 +225,7 @@
                     </div>
                 </div>
                 <div class="textarea-container">
-                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg oder deine Frage auf... Klicke danach oben auf '1. Alles kopieren'. Der sokratische Befehl wird automatisch mitkopiert!"></textarea>
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf... Klicke oben auf '1. Alles kopieren', um den sokratischen Tutor-Befehl lückenlos mitzunehmen!"></textarea>
                     <div class="text-image-preview-box" id="textImgPreview">
                         <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe geladen</span>
                     </div>
@@ -246,15 +254,20 @@
         </div>
     </div>
 
-    <div class="ki-placeholder-space" id="kiPlaceholderSpace">
-        <div class="popup-info-box">
-            <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 14px;">📌 KI-Tutor geöffnet</h3>
-            <p style="font-size: 12px; color: var(--neutral); line-height: 1.4; margin: 0; text-align: left;">
-                Das originale KI-Fenster ist jetzt als echtes Popup aktiv.<br><br>
-                <strong>Vordergrund-Schutz:</strong> Wenn das Popup hinter das Journal rutscht, klicke einfach einmal kurz irgendwo ins Journal. Das KI-Fenster springt sofort wieder nach vorne!
+    <div class="ki-split-guide" id="kiSplitGuide">
+        <h2 style="color: var(--primary); margin: 0; font-size: 20px;">🤖 KI wurde geöffnet!</h2>
+        <p style="font-size: 14px; color: var(--neutral); margin: 5px 0 15px 0;">Das Journal hat links automatisch die exakte Hälfte freigemacht.</p>
+        
+        <div class="guide-box">
+            <span style="font-size: 32px;">↔️</span>
+            <h3 style="margin: 5px 0; font-size: 16px; color: var(--secondary);">Letzter Schritt zum perfekten Arbeitsplatz:</h3>
+            <p style="font-size: 13px; color: #4e4d4c; text-align: left; margin: 8px 0; line-height: 1.5;">
+                1. Schnapp dir den neu geöffneten KI-Tab am oberen Rand.<br>
+                2. Ziehe ihn ganz an den <strong>rechten Bildschirmrand</strong> (oder drücke kurz <code>Windows-Taste + Pfeil rechts</code>).<br>
+                3. Jetzt hast du links dein Journal und rechts die KI perfekt nebeneinander stehen!
             </p>
-            <button class="btn btn-tool" style="margin-top: 15px; font-size: 11px; width: 100%; justify-content: center;" onclick="closeKIPopupSpace()">Journal maximieren 🔲</button>
         </div>
+        <button class="btn btn-tool" style="margin-top: 30px; font-size: 12px; padding: 8px 16px;" onclick="resetSplitLayout()">Journal wieder maximieren 🔲</button>
     </div>
 
     <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
@@ -268,7 +281,6 @@
         let textModeImageBlob = null;
         let currentTool = 'pencil';
         let currentActiveMode = 'canvas';
-        let nativePopupReference = null; // Referenz auf das echte KI-Popup
 
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
@@ -299,7 +311,7 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
             if (bgImage) {
-                const maxW = canvas.width * 0.8; const maxH = 400;
+                const maxW = canvas.width * 0.9; const maxH = 400;
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
@@ -385,6 +397,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height); redrawEverything();
         }
 
+        // SYSTEM-PROMPT WIRD IN BEIDEN MODI GARANTIERT MITKOPIERT
         async function copyCombinedTextAndImage() {
             try {
                 const userText = document.getElementById('keyboardInput').value.trim();
@@ -400,7 +413,7 @@
                             'image/png': textModeImageBlob
                         });
                         await navigator.clipboard.write([item]);
-                        showToast("✓ System-Befehl, Text & Bild kopiert!");
+                        showToast("✓ Sokratischer Befehl & Text & Bild kopiert!");
                         return;
                     }
                 } else {
@@ -422,49 +435,30 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // DAS ECHTE POPUP DIREKT ANSTEUERN (Keine CSP/X-Frame-Blockade möglich)
-        function openSmartKIPopup(url, btnId) {
-            const placeholder = document.getElementById('kiPlaceholderSpace');
+        // DER SAUBERE 50/50 BILDSCHIRM-SPLIT
+        function executeSplitScreenLayout(url, btnId) {
+            const appContainer = document.getElementById('appContainer');
+            const splitGuide = document.getElementById('kiSplitGuide');
+            
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
             document.getElementById(btnId).classList.add('active-ki');
 
-            placeholder.classList.add('active');
-            setTimeout(initCanvas, 320);
+            // 1. Journal weicht flüssig auf exakt 50% der Bildschirmbreite zurück
+            appContainer.classList.add('split-active');
+            splitGuide.classList.add('active');
 
-            const popupW = 450; 
-            const popupH = window.screen.availHeight - 80;
-            const leftPos = window.screen.availWidth - popupW;
+            // Reißt das Gitter ohne Verzerrung im verkleinerten Modus mit
+            setTimeout(initCanvas, 410);
 
-            if (nativePopupReference && !nativePopupReference.closed) {
-                nativePopupReference.close();
-            }
-
-            // Öffnet die echte KI-Website nativ im Popup-Modus
-            nativePopupReference = window.open(
-                url, 
-                'real_ki_popup', 
-                `width=${popupW},height=${popupH},left=${leftPos},top=0,resizable=yes,scrollbars=yes,status=no`
-            );
+            // 2. Öffnet die KI nativ im neuen Tab (Keine Login-Probleme, keine CSP-Fehler!)
+            window.open(url, '_blank');
         }
 
-        // DER VORDERGRUND-TRICK: Holt das native Popup bei Klicks ins Journal sofort wieder hoch
-        function keepKIInForeground() {
-            if (nativePopupReference && !nativePopupReference.closed) {
-                // Ein extrem kurzer Timeout sorgt dafür, dass das Popup den Fokus behält, ohne die Eingabe im Journal zu blockieren
-                setTimeout(() => {
-                    nativePopupReference.focus();
-                }, 20);
-            }
-        }
-
-        function closeKIPopupSpace() {
-            document.getElementById('kiPlaceholderSpace').classList.remove('active');
+        function resetSplitLayout() {
+            document.getElementById('appContainer').classList.remove('split-active');
+            document.getElementById('kiSplitGuide').classList.remove('active');
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
-            if (nativePopupReference && !nativePopupReference.closed) {
-                nativePopupReference.close();
-            }
-            nativePopupReference = null;
-            setTimeout(initCanvas, 320);
+            setTimeout(initCanvas, 410);
         }
 
         function showToast(msg) {
