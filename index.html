@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.2</title>
+    <title>Sokratisches Rechenjournal v8.3</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -33,10 +33,10 @@
             transition: all 0.3s ease;
         }
 
-        /* Rechte Hilfeseite für den manuellen Split-Screen (Garantiert blockierungsfrei) */
-        .ki-split-guide {
+        /* Platzhalter auf der rechten Seite, wenn das KI-Popup aktiv ist */
+        .ki-placeholder-space {
             width: 0;
-            background: #fdfdfd;
+            background: #faf9f8;
             border-left: 0 solid #d2d0ce;
             display: flex;
             flex-direction: column;
@@ -48,19 +48,19 @@
             text-align: center;
         }
 
-        .ki-split-guide.active {
-            width: 420px;
+        .ki-placeholder-space.active {
+            width: 420px; /* Exakt die Breite, die das Popup auf dem Bildschirm einnimmt */
             border-left: 1px solid #d2d0ce;
             margin-left: 8px;
             padding: 20px;
         }
 
-        .guide-box {
-            background: #f3f2f1;
-            border: 2px dashed var(--secondary);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 15px;
+        .popup-info-box {
+            background: #ffffff;
+            border: 1px solid #d2d0ce;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             max-width: 340px;
         }
 
@@ -193,7 +193,7 @@
     <div class="app-container">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.2</strong> | Einmal kopieren, einmal bei der KI einfügen.
+                <strong>Sokratischer KI-Assistent v8.3</strong> | Einmal kopieren, einmal im KI-Popup einfügen.
             </p>
             
             <div class="action-buttons">
@@ -202,11 +202,11 @@
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
                 <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI STARTEN:</span>
+                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI TUTOR ALS POPUP:</span>
                     <div style="display:flex; gap: 3px;">
-                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openKILink('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
-                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openKILink('https://gemini.google.com', 'btn-gemini')">Gemini</button>
-                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openKILink('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openKIPopup('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
+                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openKIPopup('https://gemini.google.com', 'btn-gemini')">Gemini</button>
+                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openKIPopup('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
                     </div>
                 </div>
             </div>
@@ -251,20 +251,15 @@
         </div>
     </div>
 
-    <div class="ki-split-guide" id="kiSplitGuide">
-        <h2 style="color: var(--primary); margin: 0; font-size: 18px;">🤖 KI wurde geöffnet!</h2>
-        <p style="font-size: 13px; color: var(--neutral); margin: 5px 0 15px 0;">Das Journal hat sich automatisch schlank gemacht.</p>
-        
-        <div class="guide-box">
-            <span style="font-size: 24px;">🪟</span>
-            <h3 style="margin: 5px 0; font-size: 14px; color: var(--secondary);">So geht der Split-Screen:</h3>
-            <p style="font-size: 12px; color: #4e4d4c; text-align: left; margin: 5px 0; line-height: 1.4;">
-                1. Nimm den neu geöffneten KI-Tab am oberen Rand.<br>
-                2. Ziehe ihn ganz an den **rechten Bildschirmrand**, bis das Fenster einrastet.<br>
-                3. Jetzt hast du links das Journal und rechts die KI!
+    <div class="ki-placeholder-space" id="kiPlaceholderSpace">
+        <div class="popup-info-box">
+            <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 14px;">🤖 KI-Fenster ist aktiv</h3>
+            <p style="font-size: 12px; color: var(--neutral); line-height: 1.4; margin: 0; text-align: left;">
+                Das KI-Tutor-Fenster wurde als separates, schmales Popup geöffnet. <br><br>
+                <strong>Tipp:</strong> Schiebe das Popup einfach exakt über diesen grauen Bereich, falls es das Journal verdeckt.
             </p>
+            <button class="btn btn-tool" style="margin-top: 15px; font-size: 11px; width: 100%; justify-content: center;" onclick="closeKIPopupSpace()">Journal wieder maximieren 🔲</button>
         </div>
-        <button class="btn btn-tool" style="margin-top: 30px; font-size: 11px;" onclick="closeSplitGuide()">Journal wieder maximieren 🔲</button>
     </div>
 
     <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
@@ -278,6 +273,7 @@
         let textModeImageBlob = null;
         let currentTool = 'pencil';
         let currentActiveMode = 'canvas';
+        let activePopupReference = null; // Speichert das geöffnete KI-Popup
 
         function selectMode(mode) {
             currentActiveMode = mode;
@@ -428,26 +424,41 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // ABSOLUT SICHERES OEFFNEN & INTERNES LAYOUT-ANPASSEN
-        function openKILink(url, btnId) {
-            const guide = document.getElementById('kiSplitGuide');
+        // DAS PERFEKTE POPUP-LAYOUT
+        function openKIPopup(url, btnId) {
+            const placeholder = document.getElementById('kiPlaceholderSpace');
             
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
             document.getElementById(btnId).classList.add('active-ki');
 
-            // 1. Macht im Journal sofort Platz frei für die KI
-            guide.classList.add('active');
-
-            // 2. Öffnet die echte KI-Website stabil in einem neuen Tab
-            window.open(url, '_blank');
-
-            // 3. Passt das Rechenfeld an die neue Breite an
+            // 1. Schafft innerhalb der App sofort Platz (Gitter zieht sich nach links zusammen)
+            placeholder.classList.add('active');
             setTimeout(initCanvas, 320);
+
+            // 2. Abmessungen für das neue, schlanke Popup-Fenster berechnen
+            const popupW = 430; 
+            const popupH = window.screen.availHeight;
+            const leftPos = window.screen.availWidth - popupW; // Ganz rechts platzieren
+
+            // Falls bereits ein Popup offen ist, schliessen wir es, um Chaos zu vermeiden
+            if (activePopupReference && !activePopupReference.closed) {
+                activePopupReference.close();
+            }
+
+            // 3. Öffnet das native Browser-Popup (Blockierungssicher bei direktem Klick)
+            activePopupReference = window.open(
+                url, 
+                'ki_popup_window', 
+                `width=${popupW},height=${popupH},left=${leftPos},top=0,resizable=yes,scrollbars=yes,status=no,location=no,toolbar=no,menubar=no`
+            );
         }
 
-        function closeSplitGuide() {
-            document.getElementById('kiSplitGuide').classList.remove('active');
+        function closeKIPopupSpace() {
+            document.getElementById('kiPlaceholderSpace').classList.remove('active');
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
+            if (activePopupReference && !activePopupReference.closed) {
+                activePopupReference.close();
+            }
             setTimeout(initCanvas, 320);
         }
 
