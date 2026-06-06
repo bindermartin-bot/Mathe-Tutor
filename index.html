@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.1</title>
+    <title>Sokratisches Rechenjournal v8.2</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -25,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* Haupt-Layout-Teiler */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -34,37 +33,35 @@
             transition: all 0.3s ease;
         }
 
-        /* KI-Seitenleiste (unsichtbar beim Start) */
-        .ki-sidebar {
+        /* Rechte Hilfeseite für den manuellen Split-Screen (Garantiert blockierungsfrei) */
+        .ki-split-guide {
             width: 0;
-            background: white;
+            background: #fdfdfd;
             border-left: 0 solid #d2d0ce;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s ease;
             overflow: hidden;
-            position: relative;
+            padding: 0;
+            text-align: center;
         }
 
-        .ki-sidebar.active {
-            width: 420px; /* Perfekte, schmale Breite */
+        .ki-split-guide.active {
+            width: 420px;
             border-left: 1px solid #d2d0ce;
             margin-left: 8px;
+            padding: 20px;
         }
 
-        .ki-iframe {
-            width: 100%;
-            flex: 1;
-            border: none;
-        }
-
-        .ki-sidebar-header {
-            background: #faf9f8;
-            padding: 6px 12px;
-            border-bottom: 1px solid #edebe9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .guide-box {
+            background: #f3f2f1;
+            border: 2px dashed var(--secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            max-width: 340px;
         }
 
         /* Startbildschirm für die Modus-Auswahl */
@@ -178,7 +175,6 @@
 </head>
 <body class="canvas-mode-active">
 
-    <!-- SEITE A: Modus-Auswahl -->
     <div class="welcome-screen" id="welcomeScreen">
         <h1 style="color: var(--primary); margin: 0;">📐 Sokratisches Rechenjournal</h1>
         <p style="color: var(--neutral); margin-top: 0;">Wähle deine Eingabemethode:</p>
@@ -194,11 +190,10 @@
         </div>
     </div>
 
-    <!-- LINKER BEREICH: Das eigentliche Rechenjournal -->
     <div class="app-container">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.1</strong> | Einmal kopieren, einmal bei der KI einfügen.
+                <strong>Sokratischer KI-Assistent v8.2</strong> | Einmal kopieren, einmal bei der KI einfügen.
             </p>
             
             <div class="action-buttons">
@@ -207,18 +202,17 @@
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
                 <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI RECHTS EINBLENDEN:</span>
+                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI STARTEN:</span>
                     <div style="display:flex; gap: 3px;">
-                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="toggleKIDock('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
-                        <button class="btn btn-ki-select" id="btn-gemini" onclick="toggleKIDock('https://gemini.google.com', 'btn-gemini')">Gemini</button>
-                        <button class="btn btn-ki-select" id="btn-copilot" onclick="toggleKIDock('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="openKILink('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
+                        <button class="btn btn-ki-select" id="btn-gemini" onclick="openKILink('https://gemini.google.com', 'btn-gemini')">Gemini</button>
+                        <button class="btn btn-ki-select" id="btn-copilot" onclick="openKILink('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="main-workspace">
-            <!-- MODUS TASTATUR -->
             <div class="panel text-panel">
                 <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;">
                     <span>⌨️ Dein Lösungsweg (Tastatur)</span>
@@ -235,7 +229,6 @@
                 </div>
             </div>
             
-            <!-- MODUS STIFT -->
             <div class="panel canvas-panel">
                 <div class="editor-toolbar">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
@@ -245,7 +238,7 @@
                         <button class="btn btn-tool">🖼️ Aufgabe laden</button>
                         <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
                     </div>
-                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Mit 2 Fingern scrollen erlaubt!</span>
+                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Mit 2 Fingern scrollen!</span>
                     <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Feld löschen</button>
                 </div>
 
@@ -258,13 +251,20 @@
         </div>
     </div>
 
-    <!-- RECHTER BEREICH: Die blockierungssichere KI-Seitenleiste -->
-    <div class="ki-sidebar" id="kiSidebar">
-        <div class="ki-sidebar-header">
-            <span style="font-size: 12px; font-weight: bold; color: var(--primary);" id="kiTitle">KI Tutor</span>
-            <button class="btn btn-tool" style="padding: 2px 6px; font-size: 11px;" onclick="closeKIDock()">❌ Schliessen</button>
+    <div class="ki-split-guide" id="kiSplitGuide">
+        <h2 style="color: var(--primary); margin: 0; font-size: 18px;">🤖 KI wurde geöffnet!</h2>
+        <p style="font-size: 13px; color: var(--neutral); margin: 5px 0 15px 0;">Das Journal hat sich automatisch schlank gemacht.</p>
+        
+        <div class="guide-box">
+            <span style="font-size: 24px;">🪟</span>
+            <h3 style="margin: 5px 0; font-size: 14px; color: var(--secondary);">So geht der Split-Screen:</h3>
+            <p style="font-size: 12px; color: #4e4d4c; text-align: left; margin: 5px 0; line-height: 1.4;">
+                1. Nimm den neu geöffneten KI-Tab am oberen Rand.<br>
+                2. Ziehe ihn ganz an den **rechten Bildschirmrand**, bis das Fenster einrastet.<br>
+                3. Jetzt hast du links das Journal und rechts die KI!
+            </p>
         </div>
-        <iframe src="" class="ki-iframe" id="kiFrame"></iframe>
+        <button class="btn btn-tool" style="margin-top: 30px; font-size: 11px;" onclick="closeSplitGuide()">Journal wieder maximieren 🔲</button>
     </div>
 
     <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
@@ -300,8 +300,7 @@
         }
 
         function redrawEverything() {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = "#e5e5e5"; ctx.lineWidth = 1;
             const gridSize = 25;
             for (let x = 0; x < canvas.width; x += gridSize) {
@@ -429,39 +428,25 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // BLOCKIERUNGSSICHERE INTERNE SPLIT-SCREEN FUNKTION via iFrame
-        function toggleKIDock(url, btnId) {
-            const sidebar = document.getElementById('kiSidebar');
-            const iframe = document.getElementById('kiFrame');
-            const title = document.getElementById('kiTitle');
+        // ABSOLUT SICHERES OEFFNEN & INTERNES LAYOUT-ANPASSEN
+        function openKILink(url, btnId) {
+            const guide = document.getElementById('kiSplitGuide');
             
-            // UI-Klassen zurücksetzen
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
-
-            // Wenn die gleiche KI nochmals geklickt wird -> schliessen
-            if (sidebar.classList.contains('active') && iframe.src === url) {
-                closeKIDock();
-                return;
-            }
-
-            // Aktivieren und URL laden
-            iframe.src = url;
-            sidebar.classList.add('active');
             document.getElementById(btnId).classList.add('active-ki');
-            
-            if(url.includes('chatgpt')) title.innerText = "🤖 KI Tutor: ChatGPT";
-            if(url.includes('gemini')) title.innerText = "🤖 KI Tutor: Gemini";
-            if(url.includes('copilot')) title.innerText = "🤖 KI Tutor: Copilot";
 
-            // Rechenfeld neu berechnen, da sich die Fensterbreite geändert hat
-            setTimeout(initCanvas, 320); 
+            // 1. Macht im Journal sofort Platz frei für die KI
+            guide.classList.add('active');
+
+            // 2. Öffnet die echte KI-Website stabil in einem neuen Tab
+            window.open(url, '_blank');
+
+            // 3. Passt das Rechenfeld an die neue Breite an
+            setTimeout(initCanvas, 320);
         }
 
-        function closeKIDock() {
-            const sidebar = document.getElementById('kiSidebar');
-            const iframe = document.getElementById('kiFrame');
-            sidebar.classList.remove('active');
-            iframe.src = "";
+        function closeSplitGuide() {
+            document.getElementById('kiSplitGuide').classList.remove('active');
             document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
             setTimeout(initCanvas, 320);
         }
