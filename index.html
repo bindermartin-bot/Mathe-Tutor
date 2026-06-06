@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8</title>
+    <title>Sokratisches Rechenjournal v8.1</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -20,10 +20,51 @@
             margin: 0;
             padding: 8px;
             display: flex;
-            flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
             overflow: hidden;
+        }
+
+        /* Haupt-Layout-Teiler */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* KI-Seitenleiste (unsichtbar beim Start) */
+        .ki-sidebar {
+            width: 0;
+            background: white;
+            border-left: 0 solid #d2d0ce;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ki-sidebar.active {
+            width: 420px; /* Perfekte, schmale Breite */
+            border-left: 1px solid #d2d0ce;
+            margin-left: 8px;
+        }
+
+        .ki-iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+        }
+
+        .ki-sidebar-header {
+            background: #faf9f8;
+            padding: 6px 12px;
+            border-bottom: 1px solid #edebe9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         /* Startbildschirm für die Modus-Auswahl */
@@ -106,6 +147,7 @@
         
         .btn-ki-select { background: #ffffff; color: #4b0082; border: 1px solid #b19ffb; font-size: 11px; padding: 4px 8px; }
         .btn-ki-select:hover { background: #e6e0fa; }
+        .btn-ki-select.active-ki { background: var(--primary); color: white; }
 
         .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
         .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
@@ -126,7 +168,7 @@
         .text-image-preview-box { flex: 1; border: 2px dashed #d2d0ce; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; background: #faf9f8; position: relative; overflow: hidden; }
         .text-image-preview-box img { max-width: 100%; max-height: 90%; object-fit: contain; }
 
-        /* Scrollbarer Zeichenbereich (Stift-Modus) */
+        /* Scrollbarer Zeichenbereich */
         .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; }
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
@@ -152,66 +194,77 @@
         </div>
     </div>
 
-    <!-- SEITE B: Haupt-App -->
-    <div class="top-bar">
-        <p class="info-text">
-            <strong>Sokratischer KI-Assistent v8.0</strong> | Einmal kopieren, einmal bei der KI einfügen.
-        </p>
-        
-        <div class="action-buttons">
-            <button class="btn btn-tool" style="font-size: 11px;" onclick="showWelcomeScreen()">🔄 Modus wechseln</button>
-            <button class="btn btn-step1" onclick="copyCombinedTextAndImage()"><span>1. Alles kopieren</span> 📋</button>
-            <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
+    <!-- LINKER BEREICH: Das eigentliche Rechenjournal -->
+    <div class="app-container">
+        <div class="top-bar">
+            <p class="info-text">
+                <strong>Sokratischer KI-Assistent v8.1</strong> | Einmal kopieren, einmal bei der KI einfügen.
+            </p>
             
-            <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 SPLIT-SCREEN STARTEN:</span>
-                <div style="display:flex; gap: 3px;">
-                    <button class="btn btn-ki-select" onclick="openKIAndSplit('https://chatgpt.com')">ChatGPT</button>
-                    <button class="btn btn-ki-select" onclick="openKIAndSplit('https://gemini.google.com')">Gemini</button>
-                    <button class="btn btn-ki-select" onclick="openKIAndSplit('https://copilot.microsoft.com')">Copilot</button>
+            <div class="action-buttons">
+                <button class="btn btn-tool" style="font-size: 11px;" onclick="showWelcomeScreen()">🔄 Modus wechseln</button>
+                <button class="btn btn-step1" onclick="copyCombinedTextAndImage()"><span>1. Alles kopieren</span> 📋</button>
+                <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
+                
+                <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
+                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI RECHTS EINBLENDEN:</span>
+                    <div style="display:flex; gap: 3px;">
+                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="toggleKIDock('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
+                        <button class="btn btn-ki-select" id="btn-gemini" onclick="toggleKIDock('https://gemini.google.com', 'btn-gemini')">Gemini</button>
+                        <button class="btn btn-ki-select" id="btn-copilot" onclick="toggleKIDock('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-workspace">
+            <!-- MODUS TASTATUR -->
+            <div class="panel text-panel">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;">
+                    <span>⌨️ Dein Lösungsweg (Tastatur)</span>
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-tool" style="padding: 2px 8px; font-size: 11px;">🖼️ Aufgabe für Textmodus laden</button>
+                        <input type="file" id="textModeImageLoader" accept="image/*" onchange="handleTextModeImage(event)">
+                    </div>
+                </div>
+                <div class="textarea-container">
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf..."></textarea>
+                    <div class="text-image-preview-box" id="textImgPreview">
+                        <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe geladen</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODUS STIFT -->
+            <div class="panel canvas-panel">
+                <div class="editor-toolbar">
+                    <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
+                    <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
+                    
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-tool">🖼️ Aufgabe laden</button>
+                        <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
+                    </div>
+                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Mit 2 Fingern scrollen erlaubt!</span>
+                    <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Feld löschen</button>
+                </div>
+
+                <div class="scroll-wrapper" id="scrollContainer">
+                    <div class="canvas-container" id="canvas-wrapper">
+                        <canvas id="paintCanvas"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="main-workspace">
-        <!-- MODUS TASTATUR -->
-        <div class="panel text-panel">
-            <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;">
-                <span>⌨️ Dein Lösungsweg (Tastatur)</span>
-                <div class="file-input-wrapper">
-                    <button class="btn btn-tool" style="padding: 2px 8px; font-size: 11px;">🖼️ Aufgabe für Textmodus laden</button>
-                    <input type="file" id="textModeImageLoader" accept="image/*" onchange="handleTextModeImage(event)">
-                </div>
-            </div>
-            <div class="textarea-container">
-                <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf..."></textarea>
-                <div class="text-image-preview-box" id="textImgPreview">
-                    <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe geladen</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- MODUS STIFT -->
-        <div class="panel canvas-panel">
-            <div class="editor-toolbar">
-                <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
-                <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
-                
-                <div class="file-input-wrapper">
-                    <button class="btn btn-tool">🖼️ Aufgabe laden</button>
-                    <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
-                </div>
-                <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Mit 2 Fingern scrollen erlaubt!</span>
-                <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Feld löschen</button>
-            </div>
 
-            <div class="scroll-wrapper" id="scrollContainer">
-                <div class="canvas-container" id="canvas-wrapper">
-                    <canvas id="paintCanvas"></canvas>
-                </div>
-            </div>
+    <!-- RECHTER BEREICH: Die blockierungssichere KI-Seitenleiste -->
+    <div class="ki-sidebar" id="kiSidebar">
+        <div class="ki-sidebar-header">
+            <span style="font-size: 12px; font-weight: bold; color: var(--primary);" id="kiTitle">KI Tutor</span>
+            <button class="btn btn-tool" style="padding: 2px 6px; font-size: 11px;" onclick="closeKIDock()">❌ Schliessen</button>
         </div>
+        <iframe src="" class="ki-iframe" id="kiFrame"></iframe>
     </div>
 
     <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
@@ -220,10 +273,9 @@
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
-        const scrollContainer = document.getElementById('scrollContainer');
         let drawing = false;
         let bgImage = null;
-        let textModeImageBlob = null; // Speichert das Bild für den Tastaturmodus
+        let textModeImageBlob = null;
         let currentTool = 'pencil';
         let currentActiveMode = 'canvas';
 
@@ -233,13 +285,8 @@
             document.body.className = mode === 'text' ? 'text-mode-active' : 'canvas-mode-active';
             document.querySelector('.id-canvas-only').style.display = mode === 'text' ? 'none' : 'flex';
             
-            // Text des Hauptbuttons dynamisch anpassen
             const mainBtnSpan = document.querySelector('.btn-step1 span');
-            if (mode === 'text') {
-                mainBtnSpan.innerText = "1. Alles kopieren";
-            } else {
-                mainBtnSpan.innerText = "1. Befehl kopieren";
-            }
+            mainBtnSpan.innerText = mode === 'text' ? "1. Alles kopieren" : "1. Befehl kopieren";
             
             setTimeout(initCanvas, 100);
         }
@@ -255,9 +302,7 @@
         function redrawEverything() {
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = "#e5e5e5";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#e5e5e5"; ctx.lineWidth = 1;
             const gridSize = 25;
             for (let x = 0; x < canvas.width; x += gridSize) {
                 ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
@@ -265,10 +310,8 @@
             for (let y = 0; y < canvas.height; y += gridSize) {
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
-
             if (bgImage) {
-                const maxW = canvas.width * 0.8;
-                const maxH = 400;
+                const maxW = canvas.width * 0.8; const maxH = 400;
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
@@ -294,16 +337,13 @@
 
         window.addEventListener('resize', initCanvas);
 
-        // Bildverarbeitung für Tastaturmodus
         function handleTextModeImage(e) {
             const file = e.target.files[0];
             if (!file) return;
             textModeImageBlob = file;
-            
             const reader = new FileReader();
             reader.onload = function(event) {
-                const previewBox = document.getElementById('textImgPreview');
-                previewBox.innerHTML = `<img src="${event.target.result}" alt="Aufgabe">`;
+                document.getElementById('textImgPreview').innerHTML = `<img src="${event.target.result}" alt="Aufgabe">`;
             }
             reader.readAsDataURL(file);
         }
@@ -311,9 +351,7 @@
         function handleImageUpload(e) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                bgImage = new Image();
-                bgImage.onload = initCanvas;
-                bgImage.src = event.target.result;
+                bgImage = new Image(); bgImage.onload = initCanvas; bgImage.src = event.target.result;
             }
             reader.readAsDataURL(e.target.files[0]);
         }
@@ -325,29 +363,18 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        // INTELLIGENTE GESTENSTEUERUNG
         function startDrawing(e) {
-            // Wenn zwei Finger auf dem Display sind -> SCROLLEN ERLAUBEN (Zeichnen abbrechen)
             if (e.touches && e.touches.length > 1) { drawing = false; return; }
-            
             drawing = true;
             const coord = getCoordinates(e);
-            ctx.beginPath();
-            ctx.moveTo(coord.x, coord.y);
+            ctx.beginPath(); ctx.moveTo(coord.x, coord.y);
             if (currentTool === 'eraser') { ctx.lineTo(coord.x, coord.y); ctx.stroke(); }
-            
-            // Nur bei echtem 1-Finger-Touch den Standard-Scroll verhindern
-            if (!e.touches || e.touches.length === 1) {
-                e.preventDefault();
-            }
+            if (!e.touches || e.touches.length === 1) e.preventDefault();
         }
 
         function draw(e) {
-            if (!drawing) return;
-            if (e.touches && e.touches.length > 1) return; // Multitouch ignorieren
-            const coord = getCoordinates(e);
-            ctx.lineTo(coord.x, coord.y);
-            ctx.stroke();
+            if (!drawing || (e.touches && e.touches.length > 1)) return;
+            const coord = getCoordinates(e); ctx.lineTo(coord.x, coord.y); ctx.stroke();
             e.preventDefault();
         }
 
@@ -367,32 +394,25 @@
             document.getElementById('textModeImageLoader').value = "";
             document.getElementById('keyboardInput').value = "";
             document.getElementById('textImgPreview').innerHTML = '<span style="color: #a19f9d; font-size: 12px;">Keine Aufgabe geladen</span>';
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            redrawEverything();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); redrawEverything();
         }
 
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
-        // KOMBINIERTES KOPIEREN (1-Klick für Text + optionales Aufgabenbild)
         async function copyCombinedTextAndImage() {
             try {
                 const userText = document.getElementById('keyboardInput').value.trim();
                 let fullPrompt = baseSystemPrompt;
-                if (userText.length > 0) {
-                    fullPrompt += "\n\nHier ist mein getippter Rechenweg bzw. meine Frage dazu:\n" + userText;
-                }
+                if (userText.length > 0) fullPrompt += "\n\nHier ist mein getippter Rechenweg bzw. meine Frage dazu:\n" + userText;
 
-                // Wenn wir im Textmodus sind UND ein Bild geladen wurde
                 if (currentActiveMode === 'text' && textModeImageBlob) {
-                    const clipboardData = {
+                    const item = new ClipboardItem({
                         'text/plain': new Blob([fullPrompt], { type: 'text/plain' }),
                         'image/png': textModeImageBlob
-                    };
-                    const item = new ClipboardItem(clipboardData);
+                    });
                     await navigator.clipboard.write([item]);
                     showToast("✓ Befehl, Text & Bild kopiert! Jetzt 1x Einfügen.");
                 } else {
-                    // Normales reines Textkopieren für Schritt 1 im Stiftmodus
                     await navigator.clipboard.writeText(fullPrompt);
                     showToast("✓ Sokratischer Befehl kopiert!");
                 }
@@ -409,40 +429,47 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // ABSOLUT STABILES WINDOW-SPLITTING (Umgeht die Browser-Sicherheitsblockade)
-        function openKIAndSplit(kiUrl) {
-            // Falls dieser Tab NICHT als Pop-up läuft, tricksen wir den Browser aus:
-            if (!window.opener && !window.name.includes('journal_split')) {
-                const totalWidth = window.screen.availWidth;
-                const totalHeight = window.screen.availHeight;
-                
-                const kiWidth = 420; // Schmalere KI-Leiste für optimalen Fokus
-                const journalWidth = totalWidth - kiWidth;
+        // BLOCKIERUNGSSICHERE INTERNE SPLIT-SCREEN FUNKTION via iFrame
+        function toggleKIDock(url, btnId) {
+            const sidebar = document.getElementById('kiSidebar');
+            const iframe = document.getElementById('kiFrame');
+            const title = document.getElementById('kiTitle');
+            
+            // UI-Klassen zurücksetzen
+            document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
 
-                // 1. Öffnet die KI rechts
-                window.open(kiUrl, 'ki_split_popup', `width=${kiWidth},height=${totalHeight},left=${journalWidth},top=0,menubar=no,toolbar=no,location=no,status=no`);
-
-                // 2. Öffnet diese App als steuerbares Fenster links neu
-                const currentUrl = window.location.href;
-                window.open(currentUrl, 'journal_split_window', `width=${journalWidth},height=${totalHeight},left=0,top=0`);
-                
-                // 3. Schliesst den unskalierbaren Ursprungs-Tab
-                window.close();
-            } else {
-                // Wenn das Fenster bereits im Split-Modus läuft, öffnet sich nur die KI neu
-                window.open(kiUrl, 'ki_split_popup');
+            // Wenn die gleiche KI nochmals geklickt wird -> schliessen
+            if (sidebar.classList.contains('active') && iframe.src === url) {
+                closeKIDock();
+                return;
             }
+
+            // Aktivieren und URL laden
+            iframe.src = url;
+            sidebar.classList.add('active');
+            document.getElementById(btnId).classList.add('active-ki');
+            
+            if(url.includes('chatgpt')) title.innerText = "🤖 KI Tutor: ChatGPT";
+            if(url.includes('gemini')) title.innerText = "🤖 KI Tutor: Gemini";
+            if(url.includes('copilot')) title.innerText = "🤖 KI Tutor: Copilot";
+
+            // Rechenfeld neu berechnen, da sich die Fensterbreite geändert hat
+            setTimeout(initCanvas, 320); 
+        }
+
+        function closeKIDock() {
+            const sidebar = document.getElementById('kiSidebar');
+            const iframe = document.getElementById('kiFrame');
+            sidebar.classList.remove('active');
+            iframe.src = "";
+            document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
+            setTimeout(initCanvas, 320);
         }
 
         function showToast(msg) {
             const toast = document.getElementById('statusToast');
             toast.innerText = msg; toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
-        }
-
-        // Prüfen, ob wir im neu geöffneten Fenster sind, um direkt den Welcome-Screen sauber darzustellen
-        if(window.name === 'journal_split_window') {
-            document.getElementById('welcomeScreen').style.display = 'none';
         }
     </script>
 </body>
