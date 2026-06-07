@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.6</title>
+    <title>Sokratisches Rechenjournal v8.7</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -20,59 +20,13 @@
             margin: 0;
             padding: 8px;
             display: flex;
+            flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
             overflow: hidden;
         }
 
-        /* Die App nimmt standardmässig 100% ein, schrumpft aber bei KI-Start exakt auf 50vw (halber Bildschirm) */
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            width: 100%;
-            min-width: 0;
-            transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-
-        .app-container.split-active {
-            flex: none;
-            width: calc(50vw - 16px);
-        }
-
-        /* Rechter Info-Bereich: Erscheint exakt auf der zweiten Bildschirmhälfte */
-        .ki-split-guide {
-            width: 0;
-            background: #ffffff;
-            border-left: 0 solid #d2d0ce;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
-            overflow: hidden;
-            padding: 0;
-            text-align: center;
-        }
-
-        .ki-split-guide.active {
-            width: calc(50vw - 8px);
-            border-left: 1px solid #d2d0ce;
-            margin-left: 8px;
-            padding: 30px;
-            box-sizing: border-box;
-        }
-
-        .guide-box {
-            background: #f3f2f1;
-            border: 2px dashed var(--secondary);
-            border-radius: 8px;
-            padding: 25px;
-            margin-top: 20px;
-            max-width: 450px;
-        }
-
-        /* Startbildschirm für Modus-Auswahl */
+        /* Startbildschirm */
         .welcome-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -148,7 +102,6 @@
         
         .btn-ki-select { background: #ffffff; color: #4b0082; border: 1px solid #b19ffb; font-size: 11px; padding: 4px 8px; }
         .btn-ki-select:hover { background: #e6e0fa; }
-        .btn-ki-select.active-ki { background: var(--primary); color: white; }
 
         .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
         .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
@@ -163,7 +116,6 @@
         /* Text-Modus */
         .textarea-container { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .textarea-input { flex: 2; padding: 15px; border: 1px solid #d2d0ce; border-radius: 4px; font-size: 15px; font-family: inherit; resize: none; box-sizing: border-box; background-color: #faf9f8; }
-        .textarea-input:focus { background-color: #ffffff; outline: 1px solid var(--secondary); }
         
         .text-image-preview-box { flex: 1; border: 2px dashed #d2d0ce; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; background: #faf9f8; position: relative; overflow: hidden; }
         .text-image-preview-box img { max-width: 100%; max-height: 90%; object-fit: contain; }
@@ -173,7 +125,12 @@
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
-        .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; }
+        /* Wenn das Journal in das schwebende Fenster injiziert wird */
+        .pip-mode .top-bar { padding: 4px 6px; margin-bottom: 4px; }
+        .pip-mode .info-text { display: none; }
+        .pip-mode .btn { padding: 4px 8px; font-size: 11px; }
+
+        .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1100; }
     </style>
 </head>
 <body class="canvas-mode-active">
@@ -193,23 +150,23 @@
         </div>
     </div>
 
-    <div class="app-container" id="appContainer">
+    <div id="journalRoot" style="display: flex; flex-direction: column; flex: 1; min-width: 0; height: 100%;">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.6</strong> | Einmal kopieren, drüben einfügen.
+                <strong>Sokratischer Assistent v8.7</strong> | Journal als Vordergrund-Fenster nutzen:
             </p>
             
             <div class="action-buttons">
-                <button class="btn btn-tool" style="font-size: 11px;" onclick="showWelcomeScreen()">🔄 Modus wechseln</button>
+                <button class="btn btn-tool" id="btnModeSwitch" style="font-size: 11px;" onclick="showWelcomeScreen()">🔄 Modus wechseln</button>
                 <button class="btn btn-step1" onclick="copyCombinedTextAndImage()"><span>1. Alles kopieren</span> 📋</button>
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
-                <div style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                    <span style="font-size: 9px; font-weight: bold; color: var(--neutral);">🤖 KI IN NEUEM TAB ÖFFNEN:</span>
+                <div id="kiLauncherSection" style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
+                    <span style="font-size: 9px; font-weight: bold; color: var(--primary);">🤖 KI-ASSISTENT IM HAUPTFENSTER STARTEN:</span>
                     <div style="display:flex; gap: 3px;">
-                        <button class="btn btn-ki-select" id="btn-chatgpt" onclick="executeSplitScreenLayout('https://chatgpt.com', 'btn-chatgpt')">ChatGPT</button>
-                        <button class="btn btn-ki-select" id="btn-gemini" onclick="executeSplitScreenLayout('https://gemini.google.com', 'btn-gemini')">Gemini</button>
-                        <button class="btn btn-ki-select" id="btn-copilot" onclick="executeSplitScreenLayout('https://copilot.microsoft.com', 'btn-copilot')">Copilot</button>
+                        <button class="btn btn-ki-select" onclick="transformJournalToFloatingWidget('https://chatgpt.com')">ChatGPT 🚀</button>
+                        <button class="btn btn-ki-select" onclick="transformJournalToFloatingWidget('https://gemini.google.com')">Gemini 🚀</button>
+                        <button class="btn btn-ki-select" onclick="transformJournalToFloatingWidget('https://copilot.microsoft.com')">Copilot 🚀</button>
                     </div>
                 </div>
             </div>
@@ -220,29 +177,28 @@
                 <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;">
                     <span>⌨️ Dein Lösungsweg (Tastatur)</span>
                     <div class="file-input-wrapper">
-                        <button class="btn btn-tool" style="padding: 2px 8px; font-size: 11px;">🖼️ Aufgabe für Textmodus laden</button>
+                        <button class="btn btn-tool" style="padding: 2px 8px; font-size: 11px;">🖼️ Aufgabe laden</button>
                         <input type="file" id="textModeImageLoader" accept="image/*" onchange="handleTextModeImage(event)">
                     </div>
                 </div>
                 <div class="textarea-container">
-                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf... Klicke oben auf '1. Alles kopieren', um den sokratischen Tutor-Befehl lückenlos mitzunehmen!"></textarea>
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf... Klicke oben auf '1. Alles kopieren'. Der sokratische Prompt wird automatisch mitgeliefert!"></textarea>
                     <div class="text-image-preview-box" id="textImgPreview">
-                        <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe geladen</span>
+                        <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe</span>
                     </div>
                 </div>
             </div>
             
             <div class="panel canvas-panel">
-                <div class="editor-toolbar">
+                <div class="editor-toolbar" style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
                     <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
                     
                     <div class="file-input-wrapper">
-                        <button class="btn btn-tool">🖼️ Aufgabe laden</button>
+                        <button class="btn btn-tool" style="padding: 6px 10px;">🖼️ Aufgabe laden</button>
                         <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)">
                     </div>
-                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Mit 2 Fingern scrollen!</span>
-                    <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Feld löschen</button>
+                    <button class="btn btn-clear" style="margin-left: auto; padding: 4px 8px; font-size: 11px;" onclick="clearCanvas()">Löschen</button>
                 </div>
 
                 <div class="scroll-wrapper" id="scrollContainer">
@@ -252,22 +208,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="ki-split-guide" id="kiSplitGuide">
-        <h2 style="color: var(--primary); margin: 0; font-size: 20px;">🤖 KI wurde geöffnet!</h2>
-        <p style="font-size: 14px; color: var(--neutral); margin: 5px 0 15px 0;">Das Journal hat links automatisch die exakte Hälfte freigemacht.</p>
-        
-        <div class="guide-box">
-            <span style="font-size: 32px;">↔️</span>
-            <h3 style="margin: 5px 0; font-size: 16px; color: var(--secondary);">Letzter Schritt zum perfekten Arbeitsplatz:</h3>
-            <p style="font-size: 13px; color: #4e4d4c; text-align: left; margin: 8px 0; line-height: 1.5;">
-                1. Schnapp dir den neu geöffneten KI-Tab am oberen Rand.<br>
-                2. Ziehe ihn ganz an den <strong>rechten Bildschirmrand</strong> (oder drücke kurz <code>Windows-Taste + Pfeil rechts</code>).<br>
-                3. Jetzt hast du links dein Journal und rechts die KI perfekt nebeneinander stehen!
-            </p>
-        </div>
-        <button class="btn btn-tool" style="margin-top: 30px; font-size: 12px; padding: 8px 16px;" onclick="resetSplitLayout()">Journal wieder maximieren 🔲</button>
     </div>
 
     <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
@@ -295,8 +235,8 @@
         function showWelcomeScreen() { document.getElementById('welcomeScreen').style.display = 'flex'; }
 
         function initCanvas() {
-            canvas.width = wrapper.offsetWidth;
-            canvas.height = wrapper.offsetHeight; 
+            canvas.width = wrapper.offsetWidth || 400;
+            canvas.height = wrapper.offsetHeight || 800; 
             redrawEverything();
         }
 
@@ -311,7 +251,7 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
             if (bgImage) {
-                const maxW = canvas.width * 0.9; const maxH = 400;
+                const maxW = canvas.width * 0.9; const maxH = 350;
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
@@ -393,14 +333,14 @@
             document.getElementById('imageLoader').value = "";
             document.getElementById('textModeImageLoader').value = "";
             document.getElementById('keyboardInput').value = "";
-            document.getElementById('textImgPreview').innerHTML = '<span style="color: #a19f9d; font-size: 12px;">Keine Aufgabe geladen</span>';
+            document.getElementById('textImgPreview').innerHTML = '<span style="color: #a19f9d; font-size: 12px;">Keine Aufgabe</span>';
             ctx.clearRect(0, 0, canvas.width, canvas.height); redrawEverything();
         }
 
-        // SYSTEM-PROMPT WIRD IN BEIDEN MODI GARANTIERT MITKOPIERT
         async function copyCombinedTextAndImage() {
             try {
-                const userText = document.getElementById('keyboardInput').value.trim();
+                const targetDoc = window.document;
+                const userText = targetDoc.getElementById('keyboardInput').value.trim();
                 let fullPrompt = baseSystemPrompt;
                 
                 if (currentActiveMode === 'text') {
@@ -413,7 +353,7 @@
                             'image/png': textModeImageBlob
                         });
                         await navigator.clipboard.write([item]);
-                        showToast("✓ Sokratischer Befehl & Text & Bild kopiert!");
+                        showToast("✓ Sokratischer Befehl, Text & Bild kopiert!");
                         return;
                     }
                 } else {
@@ -435,30 +375,80 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // DER SAUBERE 50/50 BILDSCHIRM-SPLIT
-        function executeSplitScreenLayout(url, btnId) {
-            const appContainer = document.getElementById('appContainer');
-            const splitGuide = document.getElementById('kiSplitGuide');
-            
-            document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
-            document.getElementById(btnId).classList.add('active-ki');
+        // DIE REVOLUTIONÄRE INVERS-TRANSFORMATION
+        async function transformJournalToFloatingWidget(kiUrl) {
+            if ('documentPictureInPicture' in window) {
+                // 1. Ausblenden der Starter-Sektion im schwebenden Zustand, um Platz zu sparen
+                document.getElementById('kiLauncherSection').style.display = 'none';
+                document.getElementById('btnModeSwitch').style.display = 'none';
+                document.body.classList.add('pip-mode');
 
-            // 1. Journal weicht flüssig auf exakt 50% der Bildschirmbreite zurück
-            appContainer.classList.add('split-active');
-            splitGuide.classList.add('active');
+                // 2. Das schwebende "Vordergrund-Fenster" für unser Journal anfordern
+                const pipWindow = await window.documentPictureInPicture.requestWindow({
+                    width: 440,
+                    height: window.screen.availHeight - 120
+                });
 
-            // Reißt das Gitter ohne Verzerrung im verkleinerten Modus mit
-            setTimeout(initCanvas, 410);
+                // Style-Kopie in das schwebende Fenster injizieren
+                [...document.styleSheets].forEach((styleSheet) => {
+                    try {
+                        const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                        const style = pipWindow.document.createElement('style');
+                        style.textContent = cssRules;
+                        pipWindow.document.head.appendChild(style);
+                    } catch (e) {
+                        const link = pipWindow.document.createElement('link');
+                        link.rel = 'stylesheet'; link.href = styleSheet.href;
+                        pipWindow.document.head.appendChild(link);
+                    }
+                });
 
-            // 2. Öffnet die KI nativ im neuen Tab (Keine Login-Probleme, keine CSP-Fehler!)
-            window.open(url, '_blank');
-        }
+                // 3. Das komplette Journal-Widget in das schwebende Vordergrund-Fenster verschieben
+                const journalNode = document.getElementById('journalRoot');
+                pipWindow.document.body.appendChild(journalNode);
 
-        function resetSplitLayout() {
-            document.getElementById('appContainer').classList.remove('split-active');
-            document.getElementById('kiSplitGuide').classList.remove('active');
-            document.querySelectorAll('.btn-ki-select').forEach(b => b.classList.remove('active-ki'));
-            setTimeout(initCanvas, 410);
+                // Leinwand im schwebenden Fenster neu kalibrieren
+                setTimeout(() => {
+                    const pipCanvas = pipWindow.document.getElementById('paintCanvas');
+                    const pipWrapper = pipWindow.document.getElementById('canvas-wrapper');
+                    pipCanvas.width = pipWrapper.offsetWidth;
+                    pipCanvas.height = pipWrapper.offsetHeight;
+                    
+                    // Zeichen-Events im neuen Fenster spiegeln
+                    pipCanvas.addEventListener('mousedown', startDrawing);
+                    pipCanvas.addEventListener('mousemove', draw);
+                    pipCanvas.addEventListener('mouseup', stopDrawing);
+                    pipCanvas.addEventListener('mouseleave', stopDrawing);
+                    pipCanvas.addEventListener('touchstart', startDrawing, {passive: false});
+                    pipCanvas.addEventListener('touchmove', draw, {passive: false});
+                    pipCanvas.addEventListener('touchend', stopDrawing);
+                    
+                    // Redraw ausführen
+                    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+                    const gridSize = 25; ctx.strokeStyle = "#e5e5e5"; ctx.lineWidth = 1;
+                    for (let x = 0; x < pipCanvas.width; x += gridSize) {
+                        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, pipCanvas.height); ctx.stroke();
+                    }
+                    for (let y = 0; y < pipCanvas.height; y += gridSize) {
+                        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pipCanvas.width, pipCanvas.height); ctx.stroke();
+                    }
+                    if (bgImage) {
+                        const scale = Math.min((pipCanvas.width * 0.9) / bgImage.width, 350 / bgImage.height);
+                        ctx.drawImage(bgImage, 15, 15, bgImage.width * (scale > 1 ? 1 : scale), bgImage.height * (scale > 1 ? 1 : scale));
+                    }
+                }, 200);
+
+                // Wenn das schwebende Journal geschlossen wird, alles aufräumen
+                pipWindow.addEventListener('unload', () => {
+                    location.reload(); 
+                });
+
+                // 4. DAZU DER CLOU: Das urspüngliche Hauptfenster verwandelt sich SOFORT in die KI!
+                window.location.href = kiUrl;
+
+            } else {
+                alert("Dieses Feature erfordert einen modernen Chromium-Browser (Chrome / Edge). Bitte updaten Sie den Browser der Lernenden.");
+            }
         }
 
         function showToast(msg) {
