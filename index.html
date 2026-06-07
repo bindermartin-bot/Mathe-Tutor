@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v10.5</title>
+    <title>Sokratisches BM-Lernjournal v11.0</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -91,6 +91,11 @@
         .btn-gen-task { background: #fff4ce; color: #7a5000; border: 1px solid #fde28a; }
         .btn-gen-task:hover { background: #fde28a; }
         
+        /* Schritt 1 Initialisierungsbutton */
+        .btn-start-init { background: var(--primary); color: white; width: 100%; justify-content: center; padding: 8px; font-size: 13px; margin-bottom: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-start-init:hover { background: #330e34; }
+
+        /* Schritt 2 Inhalts-Buttons */
         .btn-action-execute-text { background: var(--secondary); color: white; width: 100%; justify-content: center; padding: 10px; font-size: 14px; margin-top: 6px; }
         .btn-action-execute-text:hover { background: #005a9e; }
         
@@ -115,10 +120,10 @@
         .topic-container { display: none; align-items: center; gap: 8px; flex: 1; }
         .topic-input { padding: 6px 10px; border: 1px solid #a19f9d; border-radius: 4px; flex: 1; font-size: 13px; }
 
-        /* PINNWAND (Text & Multimedia-Boxen getrennt) */
+        /* PINNWAND */
         .shared-universal-pinboard {
             background: #fffdf3; border: 1px solid #e2d69a; border-radius: 6px; padding: 8px; margin-bottom: 6px;
-            display: flex; gap: 10px; height: 110px; box-sizing: border-box;
+            display: flex; gap: 10px; height: 105px; box-sizing: border-box;
         }
         .pinboard-left { flex: 3; display: flex; flex-direction: column; }
         .pinboard-right { flex: 1; border: 1px dashed #c9be83; background: #fffcf0; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
@@ -126,9 +131,8 @@
         .pinboard-textarea:focus { outline: none; }
         
         .pinboard-image-preview-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .pinboard-image-preview-wrapper img { max-width: 100%; max-height: 75%; object-fit: contain; cursor: zoom-in; }
-        .change-image-btn { font-size: 9px; background: rgba(0,0,0,0.05); border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-top: 2px; font-weight: bold; }
-        .change-image-btn:hover { background: #edebe9; }
+        .pinboard-image-preview-wrapper img { max-width: 100%; max-height: 70%; object-fit: contain; cursor: zoom-in; }
+        .change-image-btn { font-size: 9px; background: rgba(0,0,0,0.05); border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-top: 1px; font-weight: bold; }
 
         /* Arbeitsbereich */
         .main-workspace { display: flex; gap: 10px; flex: 1; min-height: 0; }
@@ -141,10 +145,10 @@
         .textarea-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
         .textarea-input { width: 100%; flex: 1; padding: 12px; border: 1px solid #d2d0ce; border-radius: 4px; font-size: 14px; font-family: inherit; resize: none; box-sizing: border-box; background-color: #faf9f8; }
 
-        /* Stift-Layout (Zwei-Finger-Scrollen optimiert) */
-        .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; }
+        /* Stift-Layout mit korrigiertem Touch-Scrollen */
+        .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; -webkit-overflow-scrolling: touch; }
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: auto; }
 
         /* VERSCHIEBBARES POP-UP FENSTER FÜR SCREENSHOTS */
         .draggable-popup {
@@ -205,14 +209,13 @@
     <!-- MAIN APP WINDOW (Links angedockt) -->
     <div class="app-container" id="appContainer">
         
-        <!-- OBERE BAR: Navigation & KI-Auswahl -->
+        <!-- OBERE BAR -->
         <div class="top-bar">
             <div class="action-buttons">
                 <button class="btn btn-tool" onclick="goBackToSelection()" style="border-color: #a19f9d;">↩ Fachwechsel</button>
                 <span class="info-badge" id="activeSubjectBadge">Fach</span>
             </div>
 
-            <!-- MODUS-SWITCHER -->
             <div class="mode-switcher-pivot">
                 <button class="pivot-btn" id="btn-mode-text" onclick="setInputMode('text')">⌨️ Tastatur-Modus</button>
                 <button class="pivot-btn" id="btn-mode-canvas" onclick="setInputMode('canvas')">✏️ Stift-Modus</button>
@@ -226,23 +229,23 @@
             </div>
         </div>
         
-        <!-- MITTLERE BAR: Aufgabenkontext & KI-Aufgabengenerator -->
+        <!-- MITTLERE BAR -->
         <div class="task-option-bar">
             <span style="font-size: 12px; font-weight: bold; color: var(--neutral);">Deine Aufgabe:</span>
             <button class="task-toggle active" id="taskToggleOwn" onclick="setTaskOption('own')">📁 Ich habe eine eigene Aufgabe</button>
             <button class="task-toggle" id="taskToggleGen" onclick="setTaskOption('gen')">✨ KI soll mir eine Aufgabe erstellen</button>
             
             <div class="topic-container" id="topicContainerBlock">
-                <input type="text" class="topic-input" id="topicInputField" placeholder="Thema eingeben (z.B. Lineare Funktionen, OR Mietvertrag, Redoxreaktionen...)">
+                <input type="text" class="topic-input" id="topicInputField" placeholder="Thema eingeben (z.B. Lineare Funktionen...)">
                 <button class="btn btn-gen-task" onclick="copyGenerationPromptOnly()">✨ 1. Prompt: Aufgabe generieren 📋</button>
             </div>
         </div>
 
-        <!-- DIE MULTIMEDIALE PINNWAND (Mit getrennter Klick-Vergrösserung) -->
+        <!-- DIE PINNWAND -->
         <div class="shared-universal-pinboard">
             <div class="pinboard-left">
-                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Aufgabentext hier reinkopieren):</span>
-                <textarea class="pinboard-textarea" id="universalTaskText" placeholder="Füge hier den Aufgabentext ein..."></textarea>
+                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen / Screenshot laden):</span>
+                <textarea class="pinboard-textarea" id="universalTaskText" placeholder="Füge hier den Aufgabentext ein, falls vorhanden..."></textarea>
             </div>
             <div class="pinboard-right" id="universalTaskImageContainer">
                 <span style="color: #a19f9d; font-size: 10px; text-align: center; cursor: pointer; padding: 4px;" onclick="document.getElementById('taskImageLoader').click()">🖼️ Screenshot<br>hier laden</span>
@@ -250,16 +253,19 @@
             <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
         </div>
 
+        <!-- NEU: DEUTLICHER INITIALISIERUNGS-BUTTON FÜR DIE KI -->
+        <button class="btn btn-start-init" onclick="copyStartPromptWithTask()">🚀 SCHRITT 1: Sokratischen Start-Prompt + Aufgabe kopieren (Zuerst rechts in die KI einfügen)</button>
+
         <!-- DER ARBEITSBEREICH -->
         <div class="main-workspace">
             
             <!-- WORKSPACE A: TASTATUR-MODUS -->
             <div class="panel text-panel">
-                <div style="margin-bottom: 4px; font-size: 12px; font-weight: bold; color: var(--primary);">⌨️ Schreibe hier deinen getippten Lösungsweg oder deine Frage rein:</div>
+                <div style="margin-bottom: 4px; font-size: 12px; font-weight: bold; color: var(--primary);">⌨️ Schreibe hier deinen aktuellen Lösungsschritt oder deine Frage rein:</div>
                 <div class="textarea-container">
-                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schritt 1... / Ich vermute, dass..."></textarea>
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schritt 1: Ich berechne zuerst..."></textarea>
                 </div>
-                <button class="btn btn-action-execute-text" onclick="copyTextSolutionWorkflow()">📋 Tastatur-Lösungsweg + Sokratischer Prompt kopieren (dann rechts einfügen)</button>
+                <button class="btn btn-action-execute-text" onclick="copyTextSolutionWorkflowOnly()">📋 SCHRITT 2: Reinen Tastatur-Lösungsschritt kopieren (Rechts einfügen)</button>
             </div>
             
             <!-- WORKSPACE B: STIFT-MODUS -->
@@ -267,7 +273,7 @@
                 <div class="editor-toolbar" style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
                     <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
-                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Scrollen: Mit 2 Fingern parallel</span>
+                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Scrollen: Mit 2 Fingern parallel wischen</span>
                     <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Skizzenfeld löschen</button>
                 </div>
 
@@ -276,12 +282,12 @@
                         <canvas id="paintCanvas"></canvas>
                     </div>
                 </div>
-                <button class="btn btn-action-execute-canvas" onclick="copyCanvasSolutionWorkflow()">🖼️ Stift-Zeichnung (Lösungsweg) als Bild kopieren (dann rechts einfügen)</button>
+                <button class="btn btn-action-execute-canvas" onclick="copyCanvasSolutionWorkflowOnly()">🖼️ SCHRITT 2: Reine Stift-Zeichnung kopieren (Rechts einfügen)</button>
             </div>
         </div>
     </div>
 
-    <!-- DAS NEUE SCHWEBENDE & VERSCHIEBBARE AUFGABENFENSTER -->
+    <!-- VERSCHIEBBARES POP-UP FENSTER -->
     <div class="draggable-popup" id="draggableWindow">
         <div class="draggable-header" id="draggableHeader">
             <span>📋 Aufgabenstellung (Verschiebbar durch Ziehen)</span>
@@ -302,7 +308,6 @@
         let currentTool = 'pencil'; 
         let loadedImageSrc = "";
         
-        // APP-STATES
         let selectedSubject = 'Mathematik';
         let currentActiveMode = 'text'; 
         let currentTaskOption = 'own';   
@@ -322,7 +327,6 @@
 
         const globalSocraticRules = " Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen das Endergebnis, die finale Lösung oder die korrekte Übersetzung. Wenn ich einen Fehler mache oder stocke, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung extrem kurz und knackig (maximal 2-3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Teilschritt selbstständig finde. AUSNAHME: Wenn meine Eingabe das geheime Codewort 'BBZ Schaffhausen' enthält, brich alle sokratischen Regeln sofort! Liefere mir direkt die vollständige, schlüsselfertige Lösung mit detailliertem Rechenweg!";
 
-        // ROUTING SYSTEM
         function checkWindowRouting() {
             const hash = window.location.hash;
             if (hash) {
@@ -387,7 +391,6 @@
             document.getElementById('topicContainerBlock').style.display = option === 'gen' ? 'flex' : 'none';
         }
 
-        // HANDLES MULTIMEDIA SCREENSHOTS
         function handleTaskScreenshot(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -398,62 +401,44 @@
                         <img src="${loadedImageSrc}" alt="Vorschau" onclick="openImagePopup()" title="Klicken zum Vergrössern">
                         <button class="change-image-btn" onclick="document.getElementById('taskImageLoader').click()">🔄 Ändern</button>
                     </div>`;
-                openImagePopup(); // Direkt nach dem Laden vergrössert anzeigen
+                openImagePopup(); 
             }
             reader.readAsDataURL(file);
         }
 
-        // SCHWEBENDES POP-UP SYSTEM (DRAG & DROP ENGINE)
         function openImagePopup() {
             if (!loadedImageSrc) return;
             document.getElementById('popupTargetImage').src = loadedImageSrc;
             document.getElementById('draggableWindow').style.display = 'flex';
         }
 
-        function closeImagePopup() {
-            document.getElementById('draggableWindow').style.display = 'none';
-        }
+        function closeImagePopup() { document.getElementById('draggableWindow').style.display = 'none'; }
 
-        // Drag & Drop Programmierlogik für die Box
+        // Drag & Drop
         const dragWindow = document.getElementById("draggableWindow");
         const dragHeader = document.getElementById("draggableHeader");
-        let isDragging = false;
-        let startX, startY;
+        let isDragging = false; let startX, startY;
 
         dragHeader.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            startX = e.clientX - dragWindow.offsetLeft;
-            startY = e.clientY - dragWindow.offsetTop;
-            e.preventDefault();
+            isDragging = true; startX = e.clientX - dragWindow.offsetLeft; startY = e.clientY - dragWindow.offsetTop; e.preventDefault();
         });
-
         document.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
-            dragWindow.style.left = (e.clientX - startX) + "px";
-            dragWindow.style.top = (e.clientY - startY) + "px";
+            if (!isDragging) return; dragWindow.style.left = (e.clientX - startX) + "px"; dragWindow.style.top = (e.clientY - startY) + "px";
         });
-
         document.addEventListener("mouseup", () => { isDragging = false; });
-
-        // Touch-Unterstützung für Drag & Drop auf Tablets (iPad)
         dragHeader.addEventListener("touchstart", (e) => {
-            isDragging = true;
-            startX = e.touches[0].clientX - dragWindow.offsetLeft;
-            startY = e.touches[0].clientY - dragWindow.offsetTop;
+            isDragging = true; startX = e.touches[0].clientX - dragWindow.offsetLeft; startY = e.touches[0].clientY - dragWindow.offsetTop;
         });
-
         document.addEventListener("touchmove", (e) => {
-            if (!isDragging) return;
-            dragWindow.style.left = (e.touches[0].clientX - startX) + "px";
-            dragWindow.style.top = (e.touches[0].clientY - startY) + "px";
+            if (!isDragging) return; dragWindow.style.left = (e.touches[0].clientX - startX) + "px"; dragWindow.style.top = (e.touches[0].clientY - startY) + "px";
         });
-
         document.addEventListener("touchend", () => { isDragging = false; });
 
-
         // ==========================================
-        // PROMPT COMPILERS
+        // PROMPT COMPILERS & WORKFLOW LOGIC
         // ==========================================
+        
+        // KI-AUFGABE GENERIEREN (NUR PROMPT)
         async function copyGenerationPromptOnly() {
             const topicText = document.getElementById('topicInputField').value.trim();
             let prompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
@@ -462,41 +447,56 @@
             prompt += `\n\n[ANWEISUNG]: Erstelle mir eine anspruchsvolle Aufgabe auf BM-Niveau zum Thema: "${thema}". Liefere NUR die Aufgabe ohne Lösung. Wenn ich antworte, fährst du sokratisch fort.`;
             try {
                 await navigator.clipboard.writeText(prompt);
-                showToast("✨ Prompt 1 (Aufgabe generieren) kopiert!");
+                showToast("✨ Prompt (Aufgabe generieren) kopiert!");
             } catch (err) { alert('Fehler beim Kopieren.'); }
         }
 
-        async function copyTextSolutionWorkflow() {
+        // NEU: SCHRITT 1 - SYSTEM-INITIALISIERUNG + AUFGABE (Wird einmalig gesendet)
+        async function copyStartPromptWithTask() {
+            const pinboardText = document.getElementById('universalTaskText').value.trim();
+            let fullInitPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
+            fullInitPrompt += globalSocraticRules;
+
+            if (pinboardText.length > 0) {
+                fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]:\n${pinboardText}`;
+            } else {
+                fullInitPrompt += `\n\n[HINWEIS]: Ich habe dir ein Bild/Screenshot unserer Aufgabe beigefügt bzw. lade es gleich hoch.`;
+            }
+            fullInitPrompt += `\n\nBestätige kurz in einem Satz auf Schriftdeutsch, dass du bereit bist, mich sokratisch durch diese Aufgabe zu begleiten. Warte danach auf meinen ersten Lösungsschritt.`;
+
+            try {
+                await navigator.clipboard.writeText(fullInitPrompt);
+                showToast("🚀 Start-Prompt & Aufgabe kopiert! Jetzt in KI einfügen.");
+            } catch (err) { alert('Fehler beim Kopieren des Initialisierungsprompts.'); }
+        }
+
+        // NEU: SCHRITT 2 - REINER TEXT-LÖSUNGSSCHRITT (Kein Prompt-Spam mehr)
+        async function copyTextSolutionWorkflowOnly() {
             const userText = document.getElementById('keyboardInput').value.trim();
-            const pinboardText = document.getElementById('universalTaskText').value.trim();
-            let fullPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
-            fullPrompt += globalSocraticRules;
-            if (pinboardText.length > 0) fullPrompt += `\n\n[AUFGABE]: ${pinboardText}`;
-            if (userText.length > 0) fullPrompt += `\n\n[MEIN LÖSUNGSWEG / MEINE FRAGE]:\n${userText}`;
+            if (userText.length === 0) {
+                alert("Bitte gib zuerst einen Lösungsschritt ein.");
+                return;
+            }
             try {
-                await navigator.clipboard.writeText(fullPrompt);
-                showToast("📋 Text-Lösungsweg & Prompt kopiert!");
+                await navigator.clipboard.writeText(userText);
+                showToast("📋 Lösungsschritt kopiert!");
             } catch (err) { alert('Fehler beim Kopieren.'); }
         }
 
-        async function copyCanvasSolutionWorkflow() {
-            const pinboardText = document.getElementById('universalTaskText').value.trim();
-            let fullPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
-            fullPrompt += globalSocraticRules;
-            if (pinboardText.length > 0) fullPrompt += `\n\n[AUFGABE]: ${pinboardText}`;
-            fullPrompt += `\n\n[HINWEIS]: Ich habe dir meinen Lösungsweg als Bild (Zeichnung) in die Zwischenablage gelegt. Bitte analysiere diese Zeichnung Schritt für Schritt gemäss deinen sokratischen Regeln.`;
+        // NEU: SCHRITT 2 - REINE ZEICHNUNG KOPIEREN
+        async function copyCanvasSolutionWorkflowOnly() {
             try {
-                await navigator.clipboard.writeText(fullPrompt);
                 canvas.toBlob(async (blob) => {
+                    if (!blob) { alert("Das Skizzenfeld ist leer."); return; }
                     const item = new ClipboardItem({ 'image/png': blob });
                     await navigator.clipboard.write([item]);
-                    showToast("🖼️ Zeichnung kopiert! (Prompt ist ebenfalls geladen)");
+                    showToast("🖼️ Zeichnung kopiert! Direkt per Strg+V einfügen.");
                 }, 'image/png');
-            } catch (err) { alert('Fehler beim Kopieren.'); }
+            } catch (err) { alert('Fehler beim Kopieren der Zeichnung.'); }
         }
 
         // ==========================================
-        // CANVAS ENGINE (MIT ZWEI-FINGER-SCROLL-UPGRADE)
+        // CANVAS ENGINE (ZWEI-FINGER-SCROLL-FIX)
         // ==========================================
         function initCanvas() {
             if (!wrapper || currentActiveMode !== 'canvas') return;
@@ -535,28 +535,33 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        // ERKENNUNG FÜR MULTI-TOUCH (1 FINGER = ZEICHNEN, 2 FINGER = NATIVES SCROLLEN)
+        // PRÄZISE TOUCH-WEICHE: Blockiert Scrollen NUR bei exakt 1 Finger
         function startDrawing(e) {
             if (e.touches && e.touches.length > 1) { 
                 drawing = false; 
-                return; // Keine Blockade bei 2 Fingern -> Browser scrollt ganz normal
+                return; // 2+ Finger -> Native Steuerung wird zugelassen, Browser scrollt.
             }
             drawing = true; 
             const coord = getCoordinates(e); 
             ctx.beginPath(); 
             ctx.moveTo(coord.x, coord.y);
-            if (!e.touches || e.touches.length === 1) e.preventDefault();
+            if (e.touches && e.touches.length === 1) {
+                e.preventDefault(); // Verhindert Wackeln/Scrollen während des Zeichnens
+            }
         }
 
         function draw(e) {
-            if (!drawing || (e.touches && e.touches.length > 1)) {
+            if (e.touches && e.touches.length > 1) {
                 drawing = false;
-                return;
+                return; // Sofortiger Abbruch bei zweitem Finger
             }
+            if (!drawing) return;
             const coord = getCoordinates(e); 
             ctx.lineTo(coord.x, coord.y); 
             ctx.stroke(); 
-            if (e.touches && e.touches.length === 1) e.preventDefault();
+            if (e.touches && e.touches.length === 1) {
+                e.preventDefault();
+            }
         }
 
         function stopDrawing() { drawing = false; }
@@ -564,7 +569,6 @@
         canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseleave', stopDrawing);
         
-        // Passive: false erlaubt uns das gezielte Blockieren des Scrollens NUR bei genau 1 Finger
         canvas.addEventListener('touchstart', startDrawing, {passive: false}); 
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
