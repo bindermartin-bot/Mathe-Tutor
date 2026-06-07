@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v12.0</title>
+    <title>Sokratisches BM-Lernjournal v12.1</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -88,7 +88,7 @@
             display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 0.15s;
         }
         
-        /* INTELLIGENTER DIALEY-HAUPTBUTTON */
+        /* DYNAMISCHER HAUPTBUTTON */
         .btn-start-init { background: var(--primary); color: white; width: 100%; justify-content: center; padding: 12px; font-size: 14px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(74,21,75,0.25); border: 1px solid rgba(0,0,0,0.1); }
         .btn-start-init:hover { background: #330e34; transform: translateY(-1px); }
 
@@ -139,7 +139,7 @@
         .textarea-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
         .textarea-input { width: 100%; flex: 1; padding: 12px; border: 1px solid #d2d0ce; border-radius: 4px; font-size: 14px; font-family: inherit; resize: none; box-sizing: border-box; background-color: #faf9f8; }
 
-        /* Fixed Touch Canvas Architecture */
+        /* Touch Canvas Architecture */
         .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; }
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
@@ -246,8 +246,13 @@
             <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
         </div>
 
-        <!-- ZENTRALER UNIFIED SCHRITT 1 BUTTON -->
-        <button class="btn btn-start-init" id="btn-main-start-init" onclick="executeIntelligentStep1()">🚀 SCHRITT 1: Sokratischen Start-Prompt kopieren</button>
+        <!-- ZENTRALER SPLIT-BUTTON-BEREICH FÜR SCHRITT 1 -->
+        <div style="display: flex; gap: 6px; width: 100%;">
+            <button class="btn btn-start-init" id="btn-main-start-init" onclick="executeIntelligentStep1()" style="flex: 1;">🚀 SCHRITT 1: Sokratischen System-Startprompt kopieren</button>
+            <button class="btn" id="btn-image-fallback" onclick="copyImageToClipboardOnly()" style="display: none; background: var(--success); color: white; padding: 12px; font-size: 14px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(16,124,65,0.25); border: 1px solid rgba(0,0,0,0.1); font-weight: 600; flex: 1; justify-content: center; align-items: center; gap: 6px;">
+                🖼️ SCHRITT 1b: Bild für KI kopieren
+            </button>
+        </div>
 
         <!-- DER ARBEITSBEREICH -->
         <div class="main-workspace">
@@ -438,36 +443,40 @@
         document.addEventListener("touchend", () => { isDragging = false; });
 
         // ==========================================
-        // DYNAMISCHE BUTTON-STEUERUNG
+        // DYNAMISCHE BUTTON-STEUERUNG (ZWEI-KLICK-SPLIT)
         // ==========================================
         function updateStartButtonVisuals() {
             const btn = document.getElementById('btn-main-start-init');
+            const imgBtn = document.getElementById('btn-image-fallback');
             if (!btn) return;
 
             if (currentTaskOption === 'gen') {
                 btn.innerHTML = `✨ SCHRITT 1: Sokratischen Prompt zur Aufgaben-Generierung kopieren`;
                 btn.style.background = "#5c2d91";
+                if (imgBtn) imgBtn.style.display = "none";
             } else {
                 const pinboardText = document.getElementById('universalTaskText').value.trim();
                 if (loadedImageSrc) {
-                    btn.innerHTML = `🖼️ SCHRITT 1: Start-Prompt + Screenshot-Aufgabe vereint kopieren`;
-                    btn.style.background = "#107c41";
-                } else if (pinboardText.length > 0) {
-                    btn.innerHTML = `📋 SCHRITT 1: Start-Prompt + Eigene Textaufgabe kopieren`;
+                    // WENN EIN BILD GEBONDEN IST: SPLIT-MODUS AKTIVIEREN
+                    btn.innerHTML = `📋 SCHRITT 1a: Start-Prompt kopieren`;
                     btn.style.background = "var(--primary)";
+                    if (imgBtn) imgBtn.style.display = "flex";
                 } else {
                     btn.innerHTML = `🚀 SCHRITT 1: Sokratischen System-Startprompt kopieren`;
                     btn.style.background = "var(--primary)";
+                    if (imgBtn) imgBtn.style.display = "none";
+                    if (pinboardText.length > 0) {
+                        btn.innerHTML = `📋 SCHRITT 1: Start-Prompt + Textaufgabe kopieren`;
+                    }
                 }
             }
         }
 
-        // INTELLIGENTE AUSFÜHRUNG VON SCHRITT 1
+        // AUSFÜHRUNG VON SCHRITT 1a (PROMPT)
         async function executeIntelligentStep1() {
             let fullInitPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
             fullInitPrompt += globalSocraticRules;
 
-            // FALL A: KI soll Aufgabe generieren
             if (currentTaskOption === 'gen') {
                 const topicText = document.getElementById('topicInputField').value.trim();
                 const thema = topicText.length > 0 ? topicText : "einem passenden BM-Lehrplanthema dieses Faches";
@@ -480,29 +489,17 @@
                 return;
             }
 
-            // FALL B & C: Eigene Aufgabe (Text oder Bild)
             const pinboardText = document.getElementById('universalTaskText').value.trim();
             
             if (loadedImageSrc) {
-                // Es gibt ein Bild! Wir nutzen den kombinierten HTML-Clipboard-Injection-Trick
-                fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]: Siehe das angehängte/eingefügte Bild. Analysiere diese grafische oder textuelle Aufgabenstellung genau.`;
+                fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]: Siehe das gleich separat von mir eingefügte Bild. Analysiere diese grafische oder textuelle Aufgabenstellung genau.`;
                 fullInitPrompt += `\n\nBestätige kurz in einem Satz auf Schriftdeutsch, dass du bereit bist, mich sokratisch durch diese Aufgabe zu begleiten. Warte danach auf meinen ersten Lösungsschritt.`;
                 
                 try {
-                    const htmlText = `<p>${fullInitPrompt.replace(/\n/g, '<br>')}</p><br><img src="${loadedImageSrc}">`;
-                    const blobText = new Blob([fullInitPrompt], { type: 'text/plain' });
-                    const blobHTML = new Blob([htmlText], { type: 'text/html' });
-                    const item = new ClipboardItem({ 'text/plain': blobText, 'text/html': blobHTML });
-                    
-                    await navigator.clipboard.write([item]);
-                    showToast("🖼️ Start-Prompt & Screenshot zusammen kopiert! (Einfügen mit Strg+V)");
-                } catch (err) {
-                    // Fallback, falls der Browser Rich-HTML verweigert
                     await navigator.clipboard.writeText(fullInitPrompt);
-                    showToast("🚀 Text kopiert! Bitte das Bild zusätzlich manuell hochladen.");
-                }
+                    showToast("📋 Schritt 1a kopiert! Drücke jetzt Schritt 1b für das Bild.");
+                } catch (err) { alert('Fehler beim Kopieren.'); }
             } else {
-                // Reiner Text
                 if (pinboardText.length > 0) {
                     fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]:\n${pinboardText}`;
                 }
@@ -515,7 +512,23 @@
             }
         }
 
-        // SCHRITT 2 - REINER INHALT OHNE PROMPT-SPAM
+        // AUSFÜHRUNG VON SCHRITT 1b (BILD SEPARAT ALS ECHTES BINARY-BLOB)
+        async function copyImageToClipboardOnly() {
+            if (!loadedImageSrc) return;
+            try {
+                // Konvertiert das Base64-Vorschaubild zurück in ein echtes PNG-File für die Zwischenablage
+                const response = await fetch(loadedImageSrc);
+                const blob = await response.blob();
+                const item = new ClipboardItem({ [blob.type]: blob });
+                
+                await navigator.clipboard.write([item]);
+                showToast("🖼️ Bild kopiert! Drücke jetzt Strg+V (oder Einfügen) im KI-Chat.");
+            } catch (err) {
+                alert("Dein Browser verweigert den direkten Bildexport. Nutze alternativ Drag & Drop aus der Vorschau oder das Klammer-Symbol im KI-Chat.");
+            }
+        }
+
+        // SCHRITT 2 - REINER INHALT
         async function copyTextSolutionWorkflowOnly() {
             const userText = document.getElementById('keyboardInput').value.trim();
             if (userText.length === 0) {
@@ -540,7 +553,7 @@
         }
 
         // ==========================================
-        // CANVAS ENGINE (PROGRAMMATISCHER MULTI-TOUCH-FIX)
+        // CANVAS ENGINE (ZWEI-FINGER-SCROLL-FIX)
         // ==========================================
         function initCanvas() {
             if (!wrapper || currentActiveMode !== 'canvas') return;
@@ -579,10 +592,8 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        // PROGRAMMGESTEUERTE TOUCH-WEICHE FÜR ZWEI-FINGER-SCROLLEN
         function startDrawing(e) {
             if (e.touches && e.touches.length === 2) {
-                // Abbruch der Stifteingabe -> Umschalten auf Scroll-Modus
                 isScrollingTwoFingers = true;
                 drawing = false;
                 startTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
@@ -602,7 +613,6 @@
 
         function draw(e) {
             if (e.touches && e.touches.length === 2 && isScrollingTwoFingers) {
-                // Manuelle, mathematische Berechnung des Scroll-Deltas bei 2 Fingern
                 const currentTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 const deltaY = currentTouchY - startTouchY;
                 scrollContainer.scrollTop = startScrollTop - deltaY;
