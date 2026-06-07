@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.7</title>
+    <title>Sokratisches Rechenjournal v8.8</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -26,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* Startbildschirm */
+        /* Begrüssungsbildschirm */
         .welcome-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -125,12 +125,25 @@
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
-        /* Wenn das Journal in das schwebende Fenster injiziert wird */
+        /* Info-Bildschirm der im Hauptfenster bleibt */
+        .main-redirect-info {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            background: white;
+            border-radius: 6px;
+            padding: 30px;
+        }
+
+        /* Optimierungen für das schwebende PiP-Fenster */
         .pip-mode .top-bar { padding: 4px 6px; margin-bottom: 4px; }
         .pip-mode .info-text { display: none; }
         .pip-mode .btn { padding: 4px 8px; font-size: 11px; }
 
-        .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1100; }
+        .status-toast { position: fixed; bottom: 20px; left: 20px; background: #107c41; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 13px; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     </style>
 </head>
 <body class="canvas-mode-active">
@@ -150,10 +163,19 @@
         </div>
     </div>
 
+    <div class="main-redirect-info" id="mainRedirectInfo">
+        <h2 style="color: var(--success); margin: 0 0 10px 0;">✔ Journal in den Vordergrund gelöst!</h2>
+        <p style="font-size: 15px; color: var(--neutral); max-width: 500px; line-height: 1.5;">
+            Das Rechenjournal schwebt jetzt als eigenes kleines Fenster vor all deinen Programmen.<br><br>
+            <strong>Nächster Schritt:</strong> Schnapp dir den neu geöffneten KI-Tab und ziehe ihn an den <strong>rechten Bildschirmrand</strong> (oder drücke <code>Win + Pfeil rechts</code>). So hast du links Platz für das schwebende Journal und rechts die KI!
+        </p>
+        <button class="btn btn-tool" style="margin-top: 20px;" onclick="location.reload()">Journal hierher zurückholen ↩</button>
+    </div>
+
     <div id="journalRoot" style="display: flex; flex-direction: column; flex: 1; min-width: 0; height: 100%;">
         <div class="top-bar">
             <p class="info-text">
-                <strong>Sokratischer Assistent v8.7</strong> | Journal als Vordergrund-Fenster nutzen:
+                <strong>Sokratischer Assistent v8.8</strong> | Journal als freies Vordergrund-Fenster nutzen:
             </p>
             
             <div class="action-buttons">
@@ -162,7 +184,7 @@
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
                 <div id="kiLauncherSection" style="display:flex; flex-direction: column; gap: 2px; border-left: 1px solid #d2d0ce; padding-left: 8px;">
-                    <span style="font-size: 9px; font-weight: bold; color: var(--primary);">🤖 KI-ASSISTENT IM HAUPTFENSTER STARTEN:</span>
+                    <span style="font-size: 9px; font-weight: bold; color: var(--primary);">🤖 KI ÖFFNEN & JOURNAL LÖSEN:</span>
                     <div style="display:flex; gap: 3px;">
                         <button class="btn btn-ki-select" onclick="transformJournalToFloatingWidget('https://chatgpt.com')">ChatGPT 🚀</button>
                         <button class="btn btn-ki-select" onclick="transformJournalToFloatingWidget('https://gemini.google.com')">Gemini 🚀</button>
@@ -210,8 +232,6 @@
         </div>
     </div>
 
-    <div class="status-toast" id="statusToast">Erfolgreich kopiert!</div>
-
     <script>
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
@@ -221,6 +241,7 @@
         let textModeImageBlob = null;
         let currentTool = 'pencil';
         let currentActiveMode = 'canvas';
+        let activeDocument = document; // Flexibel für Haupt- oder PiP-Fenster
 
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
@@ -235,7 +256,7 @@
         function showWelcomeScreen() { document.getElementById('welcomeScreen').style.display = 'flex'; }
 
         function initCanvas() {
-            canvas.width = wrapper.offsetWidth || 400;
+            canvas.width = wrapper.offsetWidth || 430;
             canvas.height = wrapper.offsetHeight || 800; 
             redrawEverything();
         }
@@ -251,7 +272,7 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
             if (bgImage) {
-                const maxW = canvas.width * 0.9; const maxH = 350;
+                const maxW = canvas.width * 0.9; const maxH = 320;
                 let scale = Math.min(maxW / bgImage.width, maxH / bgImage.height);
                 if (scale > 1) scale = 1;
                 ctx.drawImage(bgImage, 15, 15, bgImage.width * scale, bgImage.height * scale);
@@ -261,8 +282,8 @@
 
         function setTool(tool) {
             currentTool = tool;
-            document.getElementById('tool-pencil').classList.toggle('active', tool === 'pencil');
-            document.getElementById('tool-eraser').classList.toggle('active', tool === 'eraser');
+            activeDocument.getElementById('tool-pencil').classList.toggle('active', tool === 'pencil');
+            activeDocument.getElementById('tool-eraser').classList.toggle('active', tool === 'eraser');
             updateStyles();
         }
 
@@ -283,7 +304,7 @@
             textModeImageBlob = file;
             const reader = new FileReader();
             reader.onload = function(event) {
-                document.getElementById('textImgPreview').innerHTML = `<img src="${event.target.result}" alt="Aufgabe">`;
+                activeDocument.getElementById('textImgPreview').innerHTML = `<img src="${event.target.result}" alt="Aufgabe">`;
             }
             reader.readAsDataURL(file);
         }
@@ -330,17 +351,16 @@
 
         function clearCanvas() {
             bgImage = null; textModeImageBlob = null;
-            document.getElementById('imageLoader').value = "";
-            document.getElementById('textModeImageLoader').value = "";
-            document.getElementById('keyboardInput').value = "";
-            document.getElementById('textImgPreview').innerHTML = '<span style="color: #a19f9d; font-size: 12px;">Keine Aufgabe</span>';
+            activeDocument.getElementById('imageLoader').value = "";
+            activeDocument.getElementById('textModeImageLoader').value = "";
+            activeDocument.getElementById('keyboardInput').value = "";
+            activeDocument.getElementById('textImgPreview').innerHTML = '<span style="color: #a19f9d; font-size: 12px;">Keine Aufgabe</span>';
             ctx.clearRect(0, 0, canvas.width, canvas.height); redrawEverything();
         }
 
         async function copyCombinedTextAndImage() {
             try {
-                const targetDoc = window.document;
-                const userText = targetDoc.getElementById('keyboardInput').value.trim();
+                const userText = activeDocument.getElementById('keyboardInput').value.trim();
                 let fullPrompt = baseSystemPrompt;
                 
                 if (currentActiveMode === 'text') {
@@ -353,7 +373,7 @@
                             'image/png': textModeImageBlob
                         });
                         await navigator.clipboard.write([item]);
-                        showToast("✓ Sokratischer Befehl, Text & Bild kopiert!");
+                        showToast("✓ System-Befehl, Text & Bild kopiert!");
                         return;
                     }
                 } else {
@@ -375,21 +395,21 @@
             } catch (err) { alert('Fehler beim Kopieren des Bildes.'); }
         }
 
-        // DIE REVOLUTIONÄRE INVERS-TRANSFORMATION
+        // DER FIXIERTE PIP-MODUS OHNE UNTERBRECHUNG
         async function transformJournalToFloatingWidget(kiUrl) {
             if ('documentPictureInPicture' in window) {
-                // 1. Ausblenden der Starter-Sektion im schwebenden Zustand, um Platz zu sparen
+                // UI für den kompakten Schwebemodus vorbereiten
                 document.getElementById('kiLauncherSection').style.display = 'none';
                 document.getElementById('btnModeSwitch').style.display = 'none';
                 document.body.classList.add('pip-mode');
 
-                // 2. Das schwebende "Vordergrund-Fenster" für unser Journal anfordern
+                // Schwebendes Fenster öffnen (wird vom OS dauerhaft im Vordergrund gehalten)
                 const pipWindow = await window.documentPictureInPicture.requestWindow({
-                    width: 440,
+                    width: 450,
                     height: window.screen.availHeight - 120
                 });
 
-                // Style-Kopie in das schwebende Fenster injizieren
+                // Styles übertragen
                 [...document.styleSheets].forEach((styleSheet) => {
                     try {
                         const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -403,18 +423,18 @@
                     }
                 });
 
-                // 3. Das komplette Journal-Widget in das schwebende Vordergrund-Fenster verschieben
+                // Journal-Inhalt in das schwebende Fenster verlagern
                 const journalNode = document.getElementById('journalRoot');
                 pipWindow.document.body.appendChild(journalNode);
+                activeDocument = pipWindow.document; // Fokus der Skripte auf das PiP-Fenster legen
 
-                // Leinwand im schwebenden Fenster neu kalibrieren
+                // Leinwand im neuen Fenster reaktivieren
                 setTimeout(() => {
                     const pipCanvas = pipWindow.document.getElementById('paintCanvas');
                     const pipWrapper = pipWindow.document.getElementById('canvas-wrapper');
-                    pipCanvas.width = pipWrapper.offsetWidth;
-                    pipCanvas.height = pipWrapper.offsetHeight;
+                    pipCanvas.width = pipWrapper.offsetWidth || 430;
+                    pipCanvas.height = pipWrapper.offsetHeight || 700;
                     
-                    // Zeichen-Events im neuen Fenster spiegeln
                     pipCanvas.addEventListener('mousedown', startDrawing);
                     pipCanvas.addEventListener('mousemove', draw);
                     pipCanvas.addEventListener('mouseup', stopDrawing);
@@ -423,36 +443,35 @@
                     pipCanvas.addEventListener('touchmove', draw, {passive: false});
                     pipCanvas.addEventListener('touchend', stopDrawing);
                     
-                    // Redraw ausführen
-                    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
-                    const gridSize = 25; ctx.strokeStyle = "#e5e5e5"; ctx.lineWidth = 1;
-                    for (let x = 0; x < pipCanvas.width; x += gridSize) {
-                        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, pipCanvas.height); ctx.stroke();
-                    }
-                    for (let y = 0; y < pipCanvas.height; y += gridSize) {
-                        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pipCanvas.width, pipCanvas.height); ctx.stroke();
-                    }
-                    if (bgImage) {
-                        const scale = Math.min((pipCanvas.width * 0.9) / bgImage.width, 350 / bgImage.height);
-                        ctx.drawImage(bgImage, 15, 15, bgImage.width * (scale > 1 ? 1 : scale), bgImage.height * (scale > 1 ? 1 : scale));
-                    }
+                    redrawEverything();
                 }, 200);
 
-                // Wenn das schwebende Journal geschlossen wird, alles aufräumen
+                // Wenn das schwebende Fenster geschlossen wird, App zurücksetzen
                 pipWindow.addEventListener('unload', () => {
                     location.reload(); 
                 });
 
-                // 4. DAZU DER CLOU: Das urspüngliche Hauptfenster verwandelt sich SOFORT in die KI!
-                window.location.href = kiUrl;
+                // JETZT NEU: Die Mutterseite bleibt als Info stabil stehen
+                document.getElementById('mainRedirectInfo').style.display = 'flex';
+
+                // KI öffnet sich sauber in einem neuen, unblockierten Tab daneben
+                window.open(kiUrl, '_blank');
 
             } else {
-                alert("Dieses Feature erfordert einen modernen Chromium-Browser (Chrome / Edge). Bitte updaten Sie den Browser der Lernenden.");
+                alert("Dieses Feature benötigt Google Chrome oder Microsoft Edge.");
             }
         }
 
         function showToast(msg) {
-            const toast = document.getElementById('statusToast');
+            // Erstellt den Toast dynamisch im jeweils aktiven Dokument, damit er sichtbar ist
+            const doc = activeDocument;
+            let toast = doc.getElementById('statusToast');
+            if(!toast) {
+                toast = doc.createElement('div');
+                toast.id = 'statusToast';
+                toast.className = 'status-toast';
+                doc.body.appendChild(toast);
+            }
             toast.innerText = msg; toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
