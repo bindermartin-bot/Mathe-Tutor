@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v11.0</title>
+    <title>Sokratisches BM-Lernjournal v12.0</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -27,7 +27,7 @@
             overflow: hidden;
         }
 
-        /* Launcher & Fächerauswahl */
+        /* Welcome & Launcher */
         .welcome-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -62,10 +62,10 @@
 
         .mode-selection-area { display: none; flex-direction: column; align-items: center; gap: 15px; }
 
-        /* App-Container */
+        /* App Main Container */
         .app-container { display: none; flex-direction: column; flex: 1; min-width: 0; height: 100%; }
 
-        /* Top-Bar */
+        /* Top Controls */
         .top-bar {
             background: white; border-radius: 6px; padding: 6px 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex;
@@ -75,7 +75,6 @@
         .info-badge { background: #e6e0fa; color: var(--primary); padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 13px; }
         .action-buttons { display: flex; gap: 6px; align-items: center; }
 
-        /* Modus-Umschalter */
         .mode-switcher-pivot { display: flex; background: #edebe9; padding: 2px; border-radius: 6px; border: 1px solid #d2d0ce; }
         .pivot-btn {
             background: transparent; border: none; padding: 6px 14px; font-size: 13px; font-weight: 600;
@@ -83,19 +82,16 @@
         }
         .pivot-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.15); color: var(--secondary); }
 
-        /* Buttons */
+        /* Global UI Buttons */
         .btn {
             padding: 6px 12px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px;
             display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 0.15s;
         }
-        .btn-gen-task { background: #fff4ce; color: #7a5000; border: 1px solid #fde28a; }
-        .btn-gen-task:hover { background: #fde28a; }
         
-        /* Schritt 1 Initialisierungsbutton */
-        .btn-start-init { background: var(--primary); color: white; width: 100%; justify-content: center; padding: 8px; font-size: 13px; margin-bottom: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-start-init:hover { background: #330e34; }
+        /* INTELLIGENTER DIALEY-HAUPTBUTTON */
+        .btn-start-init { background: var(--primary); color: white; width: 100%; justify-content: center; padding: 12px; font-size: 14px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(74,21,75,0.25); border: 1px solid rgba(0,0,0,0.1); }
+        .btn-start-init:hover { background: #330e34; transform: translateY(-1px); }
 
-        /* Schritt 2 Inhalts-Buttons */
         .btn-action-execute-text { background: var(--secondary); color: white; width: 100%; justify-content: center; padding: 10px; font-size: 14px; margin-top: 6px; }
         .btn-action-execute-text:hover { background: #005a9e; }
         
@@ -108,7 +104,6 @@
         .btn-ki-select { background: #ffffff; color: #4b0082; border: 1px solid #b19ffb; font-size: 12px; padding: 6px 10px; font-weight: bold; }
         .btn-ki-select:hover { background: #e6e0fa; }
 
-        /* Steuerungsbar (Aufgaben-Modus) */
         .task-option-bar {
             background: white; border-radius: 6px; padding: 6px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex; gap: 12px; margin-bottom: 6px; align-items: center;
@@ -120,7 +115,7 @@
         .topic-container { display: none; align-items: center; gap: 8px; flex: 1; }
         .topic-input { padding: 6px 10px; border: 1px solid #a19f9d; border-radius: 4px; flex: 1; font-size: 13px; }
 
-        /* PINNWAND */
+        /* Pinboard */
         .shared-universal-pinboard {
             background: #fffdf3; border: 1px solid #e2d69a; border-radius: 6px; padding: 8px; margin-bottom: 6px;
             display: flex; gap: 10px; height: 105px; box-sizing: border-box;
@@ -134,23 +129,22 @@
         .pinboard-image-preview-wrapper img { max-width: 100%; max-height: 70%; object-fit: contain; cursor: zoom-in; }
         .change-image-btn { font-size: 9px; background: rgba(0,0,0,0.05); border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-top: 1px; font-weight: bold; }
 
-        /* Arbeitsbereich */
+        /* Workspace Panels */
         .main-workspace { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .panel { background: white; border-radius: 6px; border: 1px solid #edebe9; padding: 10px; display: flex; flex-direction: column; flex: 1; min-height: 0; box-sizing: border-box; }
         
         .text-mode-active .canvas-panel { display: none !important; }
         .canvas-mode-active .text-panel { display: none !important; }
 
-        /* Text-Layout */
         .textarea-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
         .textarea-input { width: 100%; flex: 1; padding: 12px; border: 1px solid #d2d0ce; border-radius: 4px; font-size: 14px; font-family: inherit; resize: none; box-sizing: border-box; background-color: #faf9f8; }
 
-        /* Stift-Layout mit korrigiertem Touch-Scrollen */
-        .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; -webkit-overflow-scrolling: touch; }
+        /* Fixed Touch Canvas Architecture */
+        .scroll-wrapper { flex: 1; overflow-y: auto; border: 1px solid #a19f9d; border-radius: 4px; position: relative; background: #ffffff; }
         .canvas-container { position: relative; width: 100%; height: 300vh; } 
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: auto; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
-        /* VERSCHIEBBARES POP-UP FENSTER FÜR SCREENSHOTS */
+        /* Floating Viewport Window */
         .draggable-popup {
             position: fixed; top: 180px; left: 40px; width: 450px; height: 350px;
             background: white; border: 2px solid var(--primary); box-shadow: 0 6px 25px rgba(0,0,0,0.25);
@@ -236,16 +230,15 @@
             <button class="task-toggle" id="taskToggleGen" onclick="setTaskOption('gen')">✨ KI soll mir eine Aufgabe erstellen</button>
             
             <div class="topic-container" id="topicContainerBlock">
-                <input type="text" class="topic-input" id="topicInputField" placeholder="Thema eingeben (z.B. Lineare Funktionen...)">
-                <button class="btn btn-gen-task" onclick="copyGenerationPromptOnly()">✨ 1. Prompt: Aufgabe generieren 📋</button>
+                <input type="text" class="topic-input" id="topicInputField" oninput="updateStartButtonVisuals()" placeholder="Thema eingeben (z.B. Quadratische Gleichungen, OR Mietvertrag...)">
             </div>
         </div>
 
         <!-- DIE PINNWAND -->
         <div class="shared-universal-pinboard">
             <div class="pinboard-left">
-                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen / Screenshot laden):</span>
-                <textarea class="pinboard-textarea" id="universalTaskText" placeholder="Füge hier den Aufgabentext ein, falls vorhanden..."></textarea>
+                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen oder Screenshot rechts reinladen):</span>
+                <textarea class="pinboard-textarea" id="universalTaskText" oninput="updateStartButtonVisuals()" placeholder="Schreibe oder kopiere den Aufgabentext hier rein..."></textarea>
             </div>
             <div class="pinboard-right" id="universalTaskImageContainer">
                 <span style="color: #a19f9d; font-size: 10px; text-align: center; cursor: pointer; padding: 4px;" onclick="document.getElementById('taskImageLoader').click()">🖼️ Screenshot<br>hier laden</span>
@@ -253,8 +246,8 @@
             <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
         </div>
 
-        <!-- NEU: DEUTLICHER INITIALISIERUNGS-BUTTON FÜR DIE KI -->
-        <button class="btn btn-start-init" onclick="copyStartPromptWithTask()">🚀 SCHRITT 1: Sokratischen Start-Prompt + Aufgabe kopieren (Zuerst rechts in die KI einfügen)</button>
+        <!-- ZENTRALER UNIFIED SCHRITT 1 BUTTON -->
+        <button class="btn btn-start-init" id="btn-main-start-init" onclick="executeIntelligentStep1()">🚀 SCHRITT 1: Sokratischen Start-Prompt kopieren</button>
 
         <!-- DER ARBEITSBEREICH -->
         <div class="main-workspace">
@@ -263,7 +256,7 @@
             <div class="panel text-panel">
                 <div style="margin-bottom: 4px; font-size: 12px; font-weight: bold; color: var(--primary);">⌨️ Schreibe hier deinen aktuellen Lösungsschritt oder deine Frage rein:</div>
                 <div class="textarea-container">
-                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schritt 1: Ich berechne zuerst..."></textarea>
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Ich vermute, dass man hier zuerst ausklammern muss..."></textarea>
                 </div>
                 <button class="btn btn-action-execute-text" onclick="copyTextSolutionWorkflowOnly()">📋 SCHRITT 2: Reinen Tastatur-Lösungsschritt kopieren (Rechts einfügen)</button>
             </div>
@@ -273,7 +266,7 @@
                 <div class="editor-toolbar" style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
                     <button class="btn btn-tool" id="tool-eraser" onclick="setTool('eraser')">🧽 Radierer</button>
-                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Scrollen: Mit 2 Fingern parallel wischen</span>
+                    <span style="font-size: 11px; color: #605e5c; margin-left: 10px;">📜 Scrollen: Mit 2 Fingern wischen</span>
                     <button class="btn btn-clear" style="margin-left: auto;" onclick="clearCanvas()">Skizzenfeld löschen</button>
                 </div>
 
@@ -304,6 +297,8 @@
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
+        const scrollContainer = document.getElementById('scrollContainer');
+        
         let drawing = false; 
         let currentTool = 'pencil'; 
         let loadedImageSrc = "";
@@ -311,6 +306,11 @@
         let selectedSubject = 'Mathematik';
         let currentActiveMode = 'text'; 
         let currentTaskOption = 'own';   
+
+        // Programmatische Touch-Scroll Variablen
+        let isScrollingTwoFingers = false;
+        let startScrollTop = 0;
+        let startTouchY = 0;
 
         const subjectPrompts = {
             "Deutsch": "Du bist eine KI-Lehrperson für Deutsch an einer Schweizer Berufsmaturitätsschule (BM). Achte besonders auf präzise Textanalyse, logische Argumentationsketten sowie stilistische und grammatikalische Genauigkeit.",
@@ -335,6 +335,7 @@
                 document.getElementById('appContainer').style.display = 'flex';
                 document.getElementById('activeSubjectBadge').innerText = selectedSubject;
                 setInputMode(currentActiveMode);
+                updateStartButtonVisuals();
             } else {
                 document.getElementById('welcomeScreen').style.display = 'flex';
                 document.getElementById('appContainer').style.display = 'none';
@@ -389,6 +390,7 @@
             document.getElementById('taskToggleOwn').classList.toggle('active', option === 'own');
             document.getElementById('taskToggleGen').classList.toggle('active', option === 'gen');
             document.getElementById('topicContainerBlock').style.display = option === 'gen' ? 'flex' : 'none';
+            updateStartButtonVisuals();
         }
 
         function handleTaskScreenshot(e) {
@@ -402,6 +404,7 @@
                         <button class="change-image-btn" onclick="document.getElementById('taskImageLoader').click()">🔄 Ändern</button>
                     </div>`;
                 openImagePopup(); 
+                updateStartButtonVisuals();
             }
             reader.readAsDataURL(file);
         }
@@ -435,42 +438,84 @@
         document.addEventListener("touchend", () => { isDragging = false; });
 
         // ==========================================
-        // PROMPT COMPILERS & WORKFLOW LOGIC
+        // DYNAMISCHE BUTTON-STEUERUNG
         // ==========================================
-        
-        // KI-AUFGABE GENERIEREN (NUR PROMPT)
-        async function copyGenerationPromptOnly() {
-            const topicText = document.getElementById('topicInputField').value.trim();
-            let prompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
-            prompt += globalSocraticRules;
-            const thema = topicText.length > 0 ? topicText : "einem Lehrplanthema dieses Faches";
-            prompt += `\n\n[ANWEISUNG]: Erstelle mir eine anspruchsvolle Aufgabe auf BM-Niveau zum Thema: "${thema}". Liefere NUR die Aufgabe ohne Lösung. Wenn ich antworte, fährst du sokratisch fort.`;
-            try {
-                await navigator.clipboard.writeText(prompt);
-                showToast("✨ Prompt (Aufgabe generieren) kopiert!");
-            } catch (err) { alert('Fehler beim Kopieren.'); }
+        function updateStartButtonVisuals() {
+            const btn = document.getElementById('btn-main-start-init');
+            if (!btn) return;
+
+            if (currentTaskOption === 'gen') {
+                btn.innerHTML = `✨ SCHRITT 1: Sokratischen Prompt zur Aufgaben-Generierung kopieren`;
+                btn.style.background = "#5c2d91";
+            } else {
+                const pinboardText = document.getElementById('universalTaskText').value.trim();
+                if (loadedImageSrc) {
+                    btn.innerHTML = `🖼️ SCHRITT 1: Start-Prompt + Screenshot-Aufgabe vereint kopieren`;
+                    btn.style.background = "#107c41";
+                } else if (pinboardText.length > 0) {
+                    btn.innerHTML = `📋 SCHRITT 1: Start-Prompt + Eigene Textaufgabe kopieren`;
+                    btn.style.background = "var(--primary)";
+                } else {
+                    btn.innerHTML = `🚀 SCHRITT 1: Sokratischen System-Startprompt kopieren`;
+                    btn.style.background = "var(--primary)";
+                }
+            }
         }
 
-        // NEU: SCHRITT 1 - SYSTEM-INITIALISIERUNG + AUFGABE (Wird einmalig gesendet)
-        async function copyStartPromptWithTask() {
-            const pinboardText = document.getElementById('universalTaskText').value.trim();
+        // INTELLIGENTE AUSFÜHRUNG VON SCHRITT 1
+        async function executeIntelligentStep1() {
             let fullInitPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
             fullInitPrompt += globalSocraticRules;
 
-            if (pinboardText.length > 0) {
-                fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]:\n${pinboardText}`;
-            } else {
-                fullInitPrompt += `\n\n[HINWEIS]: Ich habe dir ein Bild/Screenshot unserer Aufgabe beigefügt bzw. lade es gleich hoch.`;
+            // FALL A: KI soll Aufgabe generieren
+            if (currentTaskOption === 'gen') {
+                const topicText = document.getElementById('topicInputField').value.trim();
+                const thema = topicText.length > 0 ? topicText : "einem passenden BM-Lehrplanthema dieses Faches";
+                fullInitPrompt += `\n\n[ANWEISUNG]: Erstelle mir eine anspruchsvolle Aufgabe auf BM-Niveau zum Thema: "${thema}". Liefere NUR die Aufgabe ohne Lösung. Wenn ich antworte, fährst du sokratisch fort.`;
+                
+                try {
+                    await navigator.clipboard.writeText(fullInitPrompt);
+                    showToast("✨ Prompt zur Aufgaben-Generierung kopiert!");
+                } catch (err) { alert('Fehler beim Kopieren.'); }
+                return;
             }
-            fullInitPrompt += `\n\nBestätige kurz in einem Satz auf Schriftdeutsch, dass du bereit bist, mich sokratisch durch diese Aufgabe zu begleiten. Warte danach auf meinen ersten Lösungsschritt.`;
 
-            try {
-                await navigator.clipboard.writeText(fullInitPrompt);
-                showToast("🚀 Start-Prompt & Aufgabe kopiert! Jetzt in KI einfügen.");
-            } catch (err) { alert('Fehler beim Kopieren des Initialisierungsprompts.'); }
+            // FALL B & C: Eigene Aufgabe (Text oder Bild)
+            const pinboardText = document.getElementById('universalTaskText').value.trim();
+            
+            if (loadedImageSrc) {
+                // Es gibt ein Bild! Wir nutzen den kombinierten HTML-Clipboard-Injection-Trick
+                fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]: Siehe das angehängte/eingefügte Bild. Analysiere diese grafische oder textuelle Aufgabenstellung genau.`;
+                fullInitPrompt += `\n\nBestätige kurz in einem Satz auf Schriftdeutsch, dass du bereit bist, mich sokratisch durch diese Aufgabe zu begleiten. Warte danach auf meinen ersten Lösungsschritt.`;
+                
+                try {
+                    const htmlText = `<p>${fullInitPrompt.replace(/\n/g, '<br>')}</p><br><img src="${loadedImageSrc}">`;
+                    const blobText = new Blob([fullInitPrompt], { type: 'text/plain' });
+                    const blobHTML = new Blob([htmlText], { type: 'text/html' });
+                    const item = new ClipboardItem({ 'text/plain': blobText, 'text/html': blobHTML });
+                    
+                    await navigator.clipboard.write([item]);
+                    showToast("🖼️ Start-Prompt & Screenshot zusammen kopiert! (Einfügen mit Strg+V)");
+                } catch (err) {
+                    // Fallback, falls der Browser Rich-HTML verweigert
+                    await navigator.clipboard.writeText(fullInitPrompt);
+                    showToast("🚀 Text kopiert! Bitte das Bild zusätzlich manuell hochladen.");
+                }
+            } else {
+                // Reiner Text
+                if (pinboardText.length > 0) {
+                    fullInitPrompt += `\n\n[UNSERE AUFGABE FÜR HEUTE]:\n${pinboardText}`;
+                }
+                fullInitPrompt += `\n\nBestätige kurz in einem Satz auf Schriftdeutsch, dass du bereit bist, mich sokratisch durch diese Aufgabe zu begleiten. Warte danach auf meinen ersten Lösungsschritt.`;
+                
+                try {
+                    await navigator.clipboard.writeText(fullInitPrompt);
+                    showToast("📋 Start-Prompt & Textaufgabe kopiert!");
+                } catch (err) { alert('Fehler beim Kopieren.'); }
+            }
         }
 
-        // NEU: SCHRITT 2 - REINER TEXT-LÖSUNGSSCHRITT (Kein Prompt-Spam mehr)
+        // SCHRITT 2 - REINER INHALT OHNE PROMPT-SPAM
         async function copyTextSolutionWorkflowOnly() {
             const userText = document.getElementById('keyboardInput').value.trim();
             if (userText.length === 0) {
@@ -483,20 +528,19 @@
             } catch (err) { alert('Fehler beim Kopieren.'); }
         }
 
-        // NEU: SCHRITT 2 - REINE ZEICHNUNG KOPIEREN
         async function copyCanvasSolutionWorkflowOnly() {
             try {
                 canvas.toBlob(async (blob) => {
                     if (!blob) { alert("Das Skizzenfeld ist leer."); return; }
                     const item = new ClipboardItem({ 'image/png': blob });
                     await navigator.clipboard.write([item]);
-                    showToast("🖼️ Zeichnung kopiert! Direkt per Strg+V einfügen.");
+                    showToast("🖼️ Zeichnung kopiert! Direkt rechts einfügen.");
                 }, 'image/png');
             } catch (err) { alert('Fehler beim Kopieren der Zeichnung.'); }
         }
 
         // ==========================================
-        // CANVAS ENGINE (ZWEI-FINGER-SCROLL-FIX)
+        // CANVAS ENGINE (PROGRAMMATISCHER MULTI-TOUCH-FIX)
         // ==========================================
         function initCanvas() {
             if (!wrapper || currentActiveMode !== 'canvas') return;
@@ -535,36 +579,50 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        // PRÄZISE TOUCH-WEICHE: Blockiert Scrollen NUR bei exakt 1 Finger
+        // PROGRAMMGESTEUERTE TOUCH-WEICHE FÜR ZWEI-FINGER-SCROLLEN
         function startDrawing(e) {
-            if (e.touches && e.touches.length > 1) { 
-                drawing = false; 
-                return; // 2+ Finger -> Native Steuerung wird zugelassen, Browser scrollt.
+            if (e.touches && e.touches.length === 2) {
+                // Abbruch der Stifteingabe -> Umschalten auf Scroll-Modus
+                isScrollingTwoFingers = true;
+                drawing = false;
+                startTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                startScrollTop = scrollContainer.scrollTop;
+                e.preventDefault();
+                return;
             }
-            drawing = true; 
+            if (e.touches && e.touches.length > 2) return;
+
+            isScrollingTwoFingers = false;
+            drawing = true;
             const coord = getCoordinates(e); 
             ctx.beginPath(); 
             ctx.moveTo(coord.x, coord.y);
-            if (e.touches && e.touches.length === 1) {
-                e.preventDefault(); // Verhindert Wackeln/Scrollen während des Zeichnens
-            }
+            if (e.touches) e.preventDefault(); 
         }
 
         function draw(e) {
-            if (e.touches && e.touches.length > 1) {
-                drawing = false;
-                return; // Sofortiger Abbruch bei zweitem Finger
+            if (e.touches && e.touches.length === 2 && isScrollingTwoFingers) {
+                // Manuelle, mathematische Berechnung des Scroll-Deltas bei 2 Fingern
+                const currentTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const deltaY = currentTouchY - startTouchY;
+                scrollContainer.scrollTop = startScrollTop - deltaY;
+                e.preventDefault();
+                return;
             }
-            if (!drawing) return;
+            if (!drawing || (e.touches && e.touches.length > 1)) {
+                drawing = false;
+                return;
+            }
             const coord = getCoordinates(e); 
             ctx.lineTo(coord.x, coord.y); 
             ctx.stroke(); 
-            if (e.touches && e.touches.length === 1) {
-                e.preventDefault();
-            }
+            if (e.touches) e.preventDefault();
         }
 
-        function stopDrawing() { drawing = false; }
+        function stopDrawing() { 
+            drawing = false; 
+            isScrollingTwoFingers = false; 
+        }
 
         canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseleave', stopDrawing);
