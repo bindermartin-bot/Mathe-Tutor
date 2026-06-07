@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v12.3</title>
+    <title>Sokratisches BM-Lernjournal v12.4</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -152,7 +152,7 @@
             resize: both; min-width: 250px; min-height: 200px;
         }
         .draggable-header {
-            background: var(--primary); color: white; padding: 8px 12px; cursor: move;
+            background: var(--primary); color: white; padding: 6px 12px; cursor: move;
             display: flex; justify-content: space-between; align-items: center;
             font-size: 13px; font-weight: bold; user-select: none;
         }
@@ -165,7 +165,6 @@
 </head>
 <body>
 
-    <!-- STUFE 1: Launcher & Fächerauswahl -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-card">
             <h1 style="color: var(--primary); margin: 0 0 10px 0;">📐 Sokratisches BM-Lernjournal</h1>
@@ -200,10 +199,8 @@
         </div>
     </div>
 
-    <!-- MAIN APP WINDOW (Links angedockt) -->
     <div class="app-container" id="appContainer">
         
-        <!-- OBERE BAR -->
         <div class="top-bar">
             <div class="action-buttons">
                 <button class="btn btn-tool" onclick="goBackToSelection()" style="border-color: #a19f9d;">↩ Fachwechsel</button>
@@ -223,7 +220,6 @@
             </div>
         </div>
         
-        <!-- MITTLERE BAR -->
         <div class="task-option-bar">
             <span style="font-size: 12px; font-weight: bold; color: var(--neutral);">Deine Aufgabe:</span>
             <button class="task-toggle active" id="taskToggleOwn" onclick="setTaskOption('own')">📁 Ich habe eine eigene Aufgabe</button>
@@ -234,7 +230,6 @@
             </div>
         </div>
 
-        <!-- DIE PINNWAND -->
         <div class="shared-universal-pinboard">
             <div class="pinboard-left">
                 <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen oder Screenshot mit Ctrl+V / Klick einfügen):</span>
@@ -246,7 +241,6 @@
             <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
         </div>
 
-        <!-- ZENTRALER SPLIT-BUTTON-BEREICH FÜR SCHRITT 1 -->
         <div style="display: flex; gap: 6px; width: 100%;">
             <button class="btn btn-start-init" id="btn-main-start-init" onclick="executeIntelligentStep1()" style="flex: 1;">🚀 SCHRITT 1: Sokratischen System-Startprompt kopieren</button>
             <button class="btn" id="btn-image-fallback" onclick="copyImageToClipboardOnly()" style="display: none; background: var(--success); color: white; padding: 12px; font-size: 14px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(16,124,65,0.25); border: 1px solid rgba(0,0,0,0.1); font-weight: 600; flex: 1; justify-content: center; align-items: center; gap: 6px;">
@@ -254,10 +248,8 @@
             </button>
         </div>
 
-        <!-- DER ARBEITSBEREICH -->
         <div class="main-workspace">
             
-            <!-- WORKSPACE A: TASTATUR-MODUS -->
             <div class="panel text-panel">
                 <div style="margin-bottom: 4px; font-size: 12px; font-weight: bold; color: var(--primary);">⌨️ Schreibe hier deinen aktuellen Lösungsschritt oder deine Frage rein:</div>
                 <div class="textarea-container">
@@ -266,7 +258,6 @@
                 <button class="btn btn-action-execute-text" onclick="copyTextSolutionWorkflowOnly()">📋 SCHRITT 2: Reinen Tastatur-Lösungsschritt kopieren (Rechts einfügen)</button>
             </div>
             
-            <!-- WORKSPACE B: STIFT-MODUS -->
             <div class="panel canvas-panel">
                 <div class="editor-toolbar" style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
@@ -285,11 +276,13 @@
         </div>
     </div>
 
-    <!-- VERSCHIEBBARES POP-UP FENSTER -->
     <div class="draggable-popup" id="draggableWindow">
         <div class="draggable-header" id="draggableHeader">
-            <span>📋 Aufgabenstellung (Verschiebbar durch Ziehen)</span>
-            <button class="draggable-close-btn" onclick="closeImagePopup()">✕</button>
+            <span>📋 Aufgabenstellung</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <button id="btn-pip-trigger" onclick="openAlwaysOnTopWindow()" style="background: #ffffff; color: var(--primary); border: none; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">📌 Über KI schweben lassen</button>
+                <button class="draggable-close-btn" onclick="closeImagePopup()" style="margin-left: 4px;">✕</button>
+            </div>
         </div>
         <div class="draggable-content">
             <img id="popupTargetImage" src="" alt="Vergrösserte Ansicht">
@@ -307,6 +300,7 @@
         let drawing = false; 
         let currentTool = 'pencil'; 
         let loadedImageSrc = "";
+        let pipWindowInstance = null; // Instanz für das echte Schwebefenster
         
         let selectedSubject = 'Mathematik';
         let currentActiveMode = 'text'; 
@@ -412,27 +406,28 @@
                         <img src="${loadedImageSrc}" alt="Vorschau" onclick="openImagePopup()" title="Klicken zum Vergrössern">
                         <button class="change-image-btn" onclick="document.getElementById('taskImageLoader').click()">🔄 Ändern</button>
                     </div>`;
-                openImagePopup(); 
+                
+                // Falls bereits ein PiP Fenster offen ist, aktualisieren wir das direkt dort drin mit
+                if (pipWindowInstance && !pipWindowInstance.closed) {
+                    const pipImg = pipWindowInstance.document.getElementById('pipImageElement');
+                    if (pipImg) pipImg.src = loadedImageSrc;
+                } else {
+                    openImagePopup(); 
+                }
                 updateStartButtonVisuals();
             }
             reader.readAsDataURL(file);
         }
 
-        // ==========================================
-        // OPTIMIERT: GLOBALER CTRL+V CLIPBOARD LISTENER
-        // ==========================================
+        // GLOBALER CTRL+V CLIPBOARD LISTENER
         window.addEventListener('paste', function(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     const blob = items[i].getAsFile();
-                    
-                    // SMART SWITCH: Wenn gerade der Generierungs-Modus aktiv ist,
-                    // wechseln wir automatisch auf "Eigene Aufgabe", da die Aufgabe nun real existiert.
                     if (currentTaskOption === 'gen') {
                         setTaskOption('own');
                     }
-                    
                     renderImageToPinboard(blob);
                     e.preventDefault(); 
                     showToast("🖼️ Bild direkt aus Zwischenablage geladen!");
@@ -445,16 +440,77 @@
             if (!loadedImageSrc) return;
             document.getElementById('popupTargetImage').src = loadedImageSrc;
             document.getElementById('draggableWindow').style.display = 'flex';
+            
+            // Verstecke den PiP Button, wenn der Browser die API überhaupt nicht anbietet (z.B. Firefox/Safari)
+            if (!('documentPictureInPicture' in window)) {
+                document.getElementById('btn-pip-trigger').style.display = 'none';
+            }
         }
 
         function closeImagePopup() { document.getElementById('draggableWindow').style.display = 'none'; }
 
-        // Drag & Drop für Popup
+        // ==========================================
+        // NEU: DOCUMENT PICTURE-IN-PICTURE ENGINE (IMMER IM VORDERGRUND)
+        // ==========================================
+        async function openAlwaysOnTopWindow() {
+            if (!loadedImageSrc) return;
+
+            if ('documentPictureInPicture' in window) {
+                try {
+                    // Schliessen falls bereits eins existiert
+                    if (pipWindowInstance) {
+                        pipWindowInstance.close();
+                    }
+
+                    // Fordere ein echtes schwebendes PiP-Browserfenster an
+                    pipWindowInstance = await documentPictureInPicture.requestWindow({
+                        width: 480,
+                        height: 360
+                    });
+
+                    // Styling des Mini-Schwebefensters vorbereiten
+                    const d = pipWindowInstance.document;
+                    d.body.style.margin = "0";
+                    d.body.style.padding = "4px";
+                    d.body.style.background = "#faf9f8";
+                    d.body.style.display = "flex";
+                    d.body.style.alignItems = "center";
+                    d.body.style.justify = "center";
+                    d.body.style.height = "100vh";
+                    d.body.style.boxSizing = "border-box";
+                    d.title = "📌 Schwebende Aufgabe";
+
+                    // Bild einsetzen
+                    const img = d.createElement('img');
+                    img.id = 'pipImageElement';
+                    img.src = loadedImageSrc;
+                    img.style.maxWidth = "100%";
+                    img.style.maxHeight = "100%";
+                    img.style.objectFit = "contain";
+                    img.style.borderRadius = "4px";
+                    
+                    d.body.appendChild(img);
+
+                    // Schliesse das interne Fenster, da das native jetzt aktiv ist
+                    closeImagePopup();
+                    showToast("📌 Schwebefenster aktiv! Du kannst es über die KI schieben.");
+
+                } catch (err) {
+                    console.error("PiP fehlgeschlagen, nutze normales Fenster:", err);
+                    openImagePopup();
+                }
+            } else {
+                showToast("Browser unterstützt kein echtes Schwebe-Fenster.");
+            }
+        }
+
+        // Drag & Drop für internes Popup
         const dragWindow = document.getElementById("draggableWindow");
         const dragHeader = document.getElementById("draggableHeader");
         let isDragging = false; let startX, startY;
 
         dragHeader.addEventListener("mousedown", (e) => {
+            if(e.target.tagName === 'BUTTON') return; // Verhindert Dragging beim Buttonklick
             isDragging = true; startX = e.clientX - dragWindow.offsetLeft; startY = e.clientY - dragWindow.offsetTop; e.preventDefault();
         });
         document.addEventListener("mousemove", (e) => {
@@ -462,6 +518,7 @@
         });
         document.addEventListener("mouseup", () => { isDragging = false; });
         dragHeader.addEventListener("touchstart", (e) => {
+            if(e.target.tagName === 'BUTTON') return;
             isDragging = true; startX = e.touches[0].clientX - dragWindow.offsetLeft; startY = e.touches[0].clientY - dragWindow.offsetTop;
         });
         document.addEventListener("touchmove", (e) => {
