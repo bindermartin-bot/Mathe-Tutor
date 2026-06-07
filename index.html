@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v12.1</title>
+    <title>Sokratisches BM-Lernjournal v12.2</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -237,11 +237,11 @@
         <!-- DIE PINNWAND -->
         <div class="shared-universal-pinboard">
             <div class="pinboard-left">
-                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen oder Screenshot rechts reinladen):</span>
-                <textarea class="pinboard-textarea" id="universalTaskText" oninput="updateStartButtonVisuals()" placeholder="Schreibe oder kopiere den Aufgabentext hier rein..."></textarea>
+                <span style="font-size: 10px; font-weight: bold; color: #8a7a2a; margin-bottom: 2px;">📌 PINNWAND (Eigene Aufgabe hier erfassen oder Screenshot mit Ctrl+V / Klick einfügen):</span>
+                <textarea class="pinboard-textarea" id="universalTaskText" oninput="updateStartButtonVisuals()" placeholder="Schreibe bzw. kopiere Text hier rein... ODER klicke hier hin und drücke Ctrl+V für ein Bild!"></textarea>
             </div>
             <div class="pinboard-right" id="universalTaskImageContainer">
-                <span style="color: #a19f9d; font-size: 10px; text-align: center; cursor: pointer; padding: 4px;" onclick="document.getElementById('taskImageLoader').click()">🖼️ Screenshot<br>hier laden</span>
+                <span style="color: #a19f9d; font-size: 10px; text-align: center; cursor: pointer; padding: 4px;" onclick="document.getElementById('taskImageLoader').click()">🖼️ Klick zum Laden<br>oder <b>Ctrl + V</b></span>
             </div>
             <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
         </div>
@@ -400,6 +400,11 @@
 
         function handleTaskScreenshot(e) {
             const file = e.target.files[0]; if (!file) return;
+            renderImageToPinboard(file);
+        }
+
+        // ZENTRALE FUNKTION FÜR BILD-RENDERING AUF PINNWAND
+        function renderImageToPinboard(file) {
             const reader = new FileReader();
             reader.onload = function(event) {
                 loadedImageSrc = event.target.result;
@@ -414,6 +419,25 @@
             reader.readAsDataURL(file);
         }
 
+        // ==========================================
+        // NEU: GLOBALER CTRL+V CLIPBOARD PASTE LISTENER
+        // ==========================================
+        window.addEventListener('paste', function(e) {
+            // Nur abfangen, wenn wir im Modus "Eigene Aufgabe" sind
+            if (currentTaskOption !== 'own') return;
+            
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    renderImageToPinboard(blob);
+                    e.preventDefault(); // Verhindert Artefakte im Textfeld
+                    showToast("🖼️ Bild direkt aus Zwischenablage geladen!");
+                    break;
+                }
+            }
+        });
+
         function openImagePopup() {
             if (!loadedImageSrc) return;
             document.getElementById('popupTargetImage').src = loadedImageSrc;
@@ -422,7 +446,7 @@
 
         function closeImagePopup() { document.getElementById('draggableWindow').style.display = 'none'; }
 
-        // Drag & Drop
+        // Drag & Drop für Popup
         const dragWindow = document.getElementById("draggableWindow");
         const dragHeader = document.getElementById("draggableHeader");
         let isDragging = false; let startX, startY;
@@ -442,9 +466,6 @@
         });
         document.addEventListener("touchend", () => { isDragging = false; });
 
-        // ==========================================
-        // DYNAMISCHE BUTTON-STEUERUNG (ZWEI-KLICK-SPLIT)
-        // ==========================================
         function updateStartButtonVisuals() {
             const btn = document.getElementById('btn-main-start-init');
             const imgBtn = document.getElementById('btn-image-fallback');
@@ -457,7 +478,6 @@
             } else {
                 const pinboardText = document.getElementById('universalTaskText').value.trim();
                 if (loadedImageSrc) {
-                    // WENN EIN BILD GEBONDEN IST: SPLIT-MODUS AKTIVIEREN
                     btn.innerHTML = `📋 SCHRITT 1a: Start-Prompt kopieren`;
                     btn.style.background = "var(--primary)";
                     if (imgBtn) imgBtn.style.display = "flex";
@@ -472,7 +492,6 @@
             }
         }
 
-        // AUSFÜHRUNG VON SCHRITT 1a (PROMPT)
         async function executeIntelligentStep1() {
             let fullInitPrompt = subjectPrompts[selectedSubject] || subjectPrompts["Mathematik"];
             fullInitPrompt += globalSocraticRules;
@@ -512,11 +531,9 @@
             }
         }
 
-        // AUSFÜHRUNG VON SCHRITT 1b (BILD SEPARAT ALS ECHTES BINARY-BLOB)
         async function copyImageToClipboardOnly() {
             if (!loadedImageSrc) return;
             try {
-                // Konvertiert das Base64-Vorschaubild zurück in ein echtes PNG-File für die Zwischenablage
                 const response = await fetch(loadedImageSrc);
                 const blob = await response.blob();
                 const item = new ClipboardItem({ [blob.type]: blob });
@@ -528,7 +545,6 @@
             }
         }
 
-        // SCHRITT 2 - REINER INHALT
         async function copyTextSolutionWorkflowOnly() {
             const userText = document.getElementById('keyboardInput').value.trim();
             if (userText.length === 0) {
@@ -553,7 +569,7 @@
         }
 
         // ==========================================
-        // CANVAS ENGINE (ZWEI-FINGER-SCROLL-FIX)
+        // CANVAS ENGINE
         // ==========================================
         function initCanvas() {
             if (!wrapper || currentActiveMode !== 'canvas') return;
