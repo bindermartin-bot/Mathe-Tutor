@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches BM-Lernjournal v12.2</title>
+    <title>Sokratisches BM-Lernjournal v12.3</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -403,7 +403,6 @@
             renderImageToPinboard(file);
         }
 
-        // ZENTRALE FUNKTION FÜR BILD-RENDERING AUF PINNWAND
         function renderImageToPinboard(file) {
             const reader = new FileReader();
             reader.onload = function(event) {
@@ -420,18 +419,22 @@
         }
 
         // ==========================================
-        // NEU: GLOBALER CTRL+V CLIPBOARD PASTE LISTENER
+        // OPTIMIERT: GLOBALER CTRL+V CLIPBOARD LISTENER
         // ==========================================
         window.addEventListener('paste', function(e) {
-            // Nur abfangen, wenn wir im Modus "Eigene Aufgabe" sind
-            if (currentTaskOption !== 'own') return;
-            
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     const blob = items[i].getAsFile();
+                    
+                    // SMART SWITCH: Wenn gerade der Generierungs-Modus aktiv ist,
+                    // wechseln wir automatisch auf "Eigene Aufgabe", da die Aufgabe nun real existiert.
+                    if (currentTaskOption === 'gen') {
+                        setTaskOption('own');
+                    }
+                    
                     renderImageToPinboard(blob);
-                    e.preventDefault(); // Verhindert Artefakte im Textfeld
+                    e.preventDefault(); 
                     showToast("🖼️ Bild direkt aus Zwischenablage geladen!");
                     break;
                 }
