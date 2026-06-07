@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokratisches Rechenjournal v8.9</title>
+    <title>Sokratisches Rechenjournal v8.10</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -66,7 +66,7 @@
 
         /* App-Container */
         .app-container {
-            display: none; /* Wird erst aktiv, wenn ein Modus via Hash geladen ist */
+            display: none;
             flex-direction: column;
             flex: 1;
             min-width: 0;
@@ -118,11 +118,10 @@
         .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
         .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
 
-        /* Arbeitsbereich-Steuerung über Klassen */
+        /* Arbeitsbereich-Steuerung */
         .main-workspace { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .panel { background: white; border-radius: 6px; border: 1px solid #edebe9; padding: 10px; display: flex; flex-direction: column; flex: 1; min-height: 0; box-sizing: border-box; }
         
-        /* GARANTIERT: Nur die gewählte Methode anzeigen */
         .text-mode-active .canvas-panel { display: none !important; }
         .canvas-mode-active .text-panel { display: none !important; }
 
@@ -144,6 +143,7 @@
 </head>
 <body>
 
+    <!-- BILDSCHIRM 1: Der intelligente Launcher -->
     <div class="welcome-screen" id="welcomeScreen">
         <h1 style="color: var(--primary); margin: 0; text-align: center;">📐 Sokratisches Rechenjournal</h1>
         <p style="color: var(--neutral); margin-top: 0; text-align: center;">Wähle deine Eingabemethode für den automatischen Split-Screen:</p>
@@ -159,14 +159,17 @@
         </div>
     </div>
 
+    <!-- BILDSCHIRM 2: Das eigentliche Rechenjournal -->
     <div class="app-container" id="appContainer">
         <div class="top-bar">
-            <p class="info-text">
-                <strong>Sokratischer KI-Assistent v8.8</strong> | Einmal kopieren, rechts einfügen.
-            </p>
+            <div class="action-buttons">
+                <!-- NEU: Button zum Zurückkehren -->
+                <button class="btn btn-tool" onclick="goBackToSelection()" style="border-color: #a19f9d;">↩ Modus wechseln</button>
+            </div>
             
             <div class="action-buttons">
-                <button class="btn btn-step1" onclick="copyCombinedTextAndImage()"><span>1. Alles kopieren</span> 📋</button>
+                <!-- ANGEPASST: Klarere Beschriftung für den Prompt-Button -->
+                <button class="btn btn-step1" onclick="copyCombinedTextAndImage()"><span>1. Sokratischer Prompt</span> 📋</button>
                 <button class="btn btn-step2 id-canvas-only" onclick="copyImageOnly()"><span>2. Handschrift kopieren</span> 🖼️</button>
                 
                 <div style="display:flex; align-items: center; gap: 4px; border-left: 1px solid #d2d0ce; padding-left: 10px; margin-left: 5px;">
@@ -179,6 +182,7 @@
         </div>
         
         <div class="main-workspace">
+            <!-- MODUS TASTATUR -->
             <div class="panel text-panel">
                 <div style="margin-bottom: 8px; font-size: 13px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;">
                     <span>⌨️ Dein Lösungsweg (Tastatur)</span>
@@ -188,13 +192,14 @@
                     </div>
                 </div>
                 <div class="textarea-container">
-                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf... Klicke danach oben auf '1. Alles kopieren'. Der sokratische Befehl wird automatisch im Hintergrund mitkopiert!"></textarea>
+                    <textarea id="keyboardInput" class="textarea-input" placeholder="Schreibe hier deinen Rechenweg auf... Klicke danach oben auf '1. Sokratischer Prompt'. Der sokratische Befehl wird automatisch im Hintergrund mitkopiert!"></textarea>
                     <div class="text-image-preview-box" id="textImgPreview">
                         <span style="color: #a19f9d; font-size: 12px; text-align: center;">Keine Aufgabe geladen</span>
                     </div>
                 </div>
             </div>
             
+            <!-- MODUS STIFT -->
             <div class="panel canvas-panel">
                 <div class="editor-toolbar" style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
                     <button class="btn btn-tool active" id="tool-pencil" onclick="setTool('pencil')">✏️ Stift</button>
@@ -231,7 +236,6 @@
 
         const baseSystemPrompt = "Du bist mein sokratischer Mathematiklehrer an einer Schweizer Berufsmaturitätsschule (BM). Ich zeige dir hier eine Aufgabe, eine Frage und/oder meinen handschriftlichen Rechenweg. Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen die finale Lösung oder das Endergebnis. Wenn ich einen Fehler gemacht habe oder nicht weiterkomme, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung kurz, prägnant und auf den Punkt (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Schritt selbstständig finde.";
 
-        // ROUTING-LOGIK: Erkennt, ob wir im Haupt-Launcher oder im zugeschnittenen 2/3 Fenster sind
         function checkWindowRouting() {
             const hash = window.location.hash;
             if (hash === '#text' || hash === '#canvas') {
@@ -247,16 +251,13 @@
             }
         }
 
-        // STARTET DAS JOURNAL AUTOMATISCH IM LINKEN 2/3 BEREICH
         function launchOptimizedJournalWindow(mode) {
             const width23 = Math.floor(screen.availWidth * 0.65);
             const height = screen.availHeight - 60;
             const targetUrl = window.location.href.split('#')[0] + '#' + mode;
             
-            // Öffnet das Journal-Fenster links
             window.open(targetUrl, '_blank', `width=${width23},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
             
-            // Verwandelt die Mutterseite in eine saubere Hinweismeldung
             document.getElementById('welcomeScreen').innerHTML = `
                 <h1 style="color: var(--success); margin: 0;">✔ Journal gestartet!</h1>
                 <p style="color: var(--neutral); max-width: 550px; text-align: center; line-height: 1.5; margin-top: 10px;">
@@ -267,7 +268,11 @@
             `;
         }
 
-        // ÖFFNET DIE KI AUTOMATISCH IM RECHTEN 1/3 BEREICH (Keine Überlappung möglich!)
+        // NEU: Setzt den URL-Hash zurück, um das Auswahlfenster wieder anzuzeigen
+        function goBackToSelection() {
+            window.location.hash = '';
+        }
+
         function openAISplitScreen(kiUrl) {
             const leftPosition = Math.floor(screen.availWidth * 0.65) + 6;
             const width13 = Math.floor(screen.availWidth * 0.34) - 10;
@@ -395,7 +400,7 @@
                             'image/png': textModeImageBlob
                         });
                         await navigator.clipboard.write([item]);
-                        showToast("✓ System-Befehl, Text & Bild kopiert!");
+                        showToast("✓ Sokratischer Prompt, Text & Bild kopiert!");
                         return;
                     }
                 } else {
@@ -403,7 +408,7 @@
                 }
 
                 await navigator.clipboard.writeText(fullPrompt);
-                showToast("✓ Sokratischer Befehl kopiert!");
+                showToast("✓ Sokratischer Prompt kopiert!");
             } catch (err) { alert('Fehler beim Kopieren.'); }
         }
 
@@ -423,7 +428,6 @@
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
 
-        // Initialisierungsauslöser beim Laden der Seite
         window.addEventListener('load', checkWindowRouting);
         window.addEventListener('hashchange', checkWindowRouting);
     </script>
