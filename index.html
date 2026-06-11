@@ -249,10 +249,21 @@
             border: 1.5px solid var(--border);
             padding: 8px 14px; font-size: 13.5px;
         }
-        .btn-tool.active {
-            background: var(--bbz-anthracite); color: #fff;
-            border-color: var(--bbz-anthracite);
+        
+        /* OPTISCHE UNTERSCHEIDUNG WERKZEUGE */
+        #tool-pencil.active {
+            background: #32323e !important;
+            color: #fff !important;
+            border-color: #32323e !important;
+            box-shadow: 0 2px 6px rgba(50,50,62,0.3);
         }
+        #tool-eraser.active {
+            background: #fee2e2 !important;
+            color: #d92d20 !important;
+            border-color: #fecaca !important;
+            box-shadow: 0 2px 6px rgba(217,45,32,0.2);
+        }
+        
         .btn-tool:hover:not(.active) { background: #e5e9f2; }
 
         .btn-danger {
@@ -301,34 +312,16 @@
         .top-bar .logo-mini { max-height: 28px; width: auto; }
 
         .subject-badge {
-            background: var(--bbz-green); color: #fff;
+            background: var(--bbz-anthracite); color: #fff;
             padding: 6px 14px; border-radius: var(--r-sm);
             font-size: 13.5px; font-weight: 700;
             letter-spacing: .2px;
         }
 
-        /* Mode Selector Leiste (Neu platziert) */
-        .mode-bar {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--r-md);
-            padding: 6px 14px;
-            box-shadow: var(--sh-sm);
-            display: flex; align-items: center;
-            justify-content: space-between; gap: 14px;
-            flex-shrink: 0;
-        }
-
-        .mode-bar-label {
-            font-size: 13px; font-weight: 700;
-            color: var(--muted); text-transform: uppercase;
-            letter-spacing: .5px;
-        }
-
         .pivot {
             display: flex; background: #eaeff6;
             padding: 3px; border-radius: var(--r-md);
-            gap: 2px;
+            gap: 4px;
         }
         .pivot-btn {
             background: transparent; border: none;
@@ -338,11 +331,21 @@
             border-radius: 8px;
             display: flex; align-items: center; gap: 6px;
             transition: var(--tr);
+            border: 1px solid transparent;
         }
-        .pivot-btn.active {
-            background: #fff;
-            box-shadow: 0 1px 5px rgba(0,0,0,.10);
-            color: var(--bbz-anthracite);
+        
+        /* OPTISCHE UNTERSCHEIDUNG MODUS-BUTTONS */
+        #btn-mode-text.active {
+            background: #e0f2fe !important;
+            color: #0369a1 !important;
+            border: 1px solid #bae6fd !important;
+            box-shadow: 0 1px 4px rgba(3,105,161,0.15);
+        }
+        #btn-mode-canvas.active {
+            background: #e6fffa !important;
+            color: #0d9488 !important;
+            border: 1px solid #99f6e4 !important;
+            box-shadow: 0 1px 4px rgba(13,148,136,0.15);
         }
         .pivot-btn:hover:not(.active) { color: var(--bbz-anthracite); background: rgba(255,255,255,.6); }
 
@@ -387,18 +390,18 @@
         .topic-input::placeholder { color: var(--muted-light); }
         .topic-input:focus { outline: none; border-color: var(--bbz-green); background: #fff; }
 
-        /* Pinboard (Höhe deutlich reduziert von 118px auf 75px) */
+        /* Pinboard */
         .pinboard {
             background: #fffdf4;
             border: 1.5px solid #e0c93a;
             border-radius: var(--r-md);
-            padding: 8px 12px;
+            padding: 12px 14px;
             display: flex; gap: 14px;
-            height: 75px; flex-shrink: 0;
+            height: 118px; flex-shrink: 0;
             box-shadow: 0 2px 8px rgba(235,209,71,.15);
         }
 
-        .pb-left { flex: 3; display: flex; flex-direction: column; gap: 3px; }
+        .pb-left { flex: 3; display: flex; flex-direction: column; gap: 5px; }
         .pb-label {
             font-size: 11px; font-weight: 700;
             color: #7a6010; letter-spacing: .5px;
@@ -408,8 +411,8 @@
         .pb-textarea {
             flex: 1; border: none; background: transparent;
             resize: none; font-family: var(--font);
-            font-size: 13.5px; color: var(--bbz-anthracite);
-            line-height: 1.4;
+            font-size: 14px; color: var(--bbz-anthracite);
+            line-height: 1.5;
         }
         .pb-textarea::placeholder { color: var(--muted-light); }
         .pb-textarea:focus { outline: none; }
@@ -420,22 +423,20 @@
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             position: relative; overflow: hidden;
-            transition: var(--tr); cursor: pointer;
-            min-width: 90px;
+            transition: var(--tr);
+            min-width: 110px;
         }
-        .pb-right:hover { border-color: var(--bbz-green); background: #f5fcf5; }
         .pb-right-label {
-            color: var(--muted); font-size: 11px;
+            color: var(--muted); font-size: 12px;
             text-align: center; font-weight: 500;
-            pointer-events: none; padding: 4px;
-            line-height: 1.2;
+            pointer-events: none; padding: 6px;
         }
         .pb-img-wrap { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
-        .pb-img-wrap img { max-width: 100%; max-height: 90%; object-fit: contain; cursor: zoom-in; border-radius: 4px; }
+        .pb-img-wrap img { max-width: 100%; max-height: 82%; object-fit: contain; cursor: zoom-in; border-radius: 4px; }
         .pb-img-change {
             position: absolute; bottom: 3px; right: 3px;
-            font-size: 9px; background: rgba(50,50,62,.82); color: #fff;
-            border: none; padding: 2px 7px; border-radius: 4px; cursor: pointer;
+            font-size: 9px; background: rgba(217, 45, 32, 0.9); color: #fff;
+            border: none; padding: 3px 7px; border-radius: 4px; cursor: pointer;
             font-family: var(--font); font-weight: 600;
         }
 
@@ -485,10 +486,8 @@
             letter-spacing: .5px; margin-bottom: 10px;
         }
 
-        /* Sichtbarkeitsregeln für die 3 Modi */
-        body.text-mode-active .canvas-panel, body.text-mode-active .camera-panel { display: none !important; }
-        body.canvas-mode-active .text-panel,  body.canvas-mode-active .camera-panel  { display: none !important; }
-        body.camera-mode-active .text-panel,  body.camera-mode-active .canvas-panel  { display: none !important; }
+        .text-mode-active .canvas-panel { display: none !important; }
+        .canvas-mode-active .text-panel  { display: none !important; }
 
         .textarea-input {
             flex: 1; padding: 14px;
@@ -538,13 +537,36 @@
         .popup-body { flex: 1; overflow: auto; padding: 12px; display: flex; align-items: flex-start; justify-content: center; background: #f8fafc; }
         .popup-body img { max-width: 100%; height: auto; border-radius: 4px; }
 
+        /* Custom Camera Modal Layout */
+        .camera-modal {
+            position: fixed; inset: 0;
+            background: rgba(50, 50, 62, 0.85);
+            z-index: 5000; display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .camera-box {
+            background: var(--panel);
+            border-radius: var(--r-lg);
+            width: 100%; max-width: 480px;
+            box-shadow: var(--sh-lg);
+            padding: 20px; display: flex;
+            flex-direction: column; gap: 12px;
+        }
+        .camera-video-wrap {
+            width: 100%; background: #000;
+            border-radius: var(--r-md);
+            overflow: hidden; aspect-ratio: 4/3;
+        }
+        #cameraVideo { width: 100%; height: 100%; object-fit: cover; }
+
         /* Toast */
         .toast {
             position: fixed; bottom: 22px; left: 22px;
             background: var(--bbz-anthracite); color: #fff;
             padding: 12px 22px; border-radius: 10px;
             font-weight: 600; font-size: 14px;
-            display: none; box-shadow: var(--sh-lg); z-index: 4000;
+            display: none; box-shadow: var(--sh-lg); z-index: 6000;
         }
 
         /* Footer */
@@ -633,6 +655,10 @@
             <button class="btn btn-ghost" style="padding:7px 13px;font-size:13.5px;" onclick="goBackToSelection()">↩ Fachwechsel</button>
             <span class="subject-badge" id="activeSubjectBadge">Fach</span>
         </div>
+        <div class="pivot">
+            <button class="pivot-btn active" id="btn-mode-text" onclick="setInputMode('text')">⌨️ Tastatur</button>
+            <button class="pivot-btn" id="btn-mode-canvas" onclick="setInputMode('canvas')">✏️ Stift-Skizze</button>
+        </div>
         <img src="image_b1f285.png" alt="BBZ" class="logo-mini" onerror="this.style.display='none'">
     </div>
 
@@ -650,26 +676,17 @@
             <span class="pb-label">📌 Pinnwand — Text eingeben oder Bild einfügen (Ctrl+V)</span>
             <textarea class="pb-textarea" id="universalTaskText" oninput="updateWorkspaceVisuals()" placeholder="Aufgabentext hier eingeben oder Bild per Ctrl+V einfügen…"></textarea>
         </div>
-        <div class="pb-right" id="universalTaskImageContainer" onclick="document.getElementById('taskImageLoader').click()">
-            <span class="pb-right-label">🖼️ Bild laden<br><span style="font-size:10px;opacity:.7;">oder <b>Ctrl + V</b></span></span>
-        </div>
+        <div class="pb-right" id="universalTaskImageContainer">
+            </div>
         <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
     </div>
 
     <div id="workspaceActionBlock"></div>
 
-    <div class="mode-bar">
-        <span class="mode-bar-label">💬 Schritt 2 — Lösungsschritt eingeben mit:</span>
-        <div class="pivot">
-            <button class="pivot-btn active" id="btn-mode-text" onclick="setInputMode('text')">⌨️ Tastatur</button>
-            <button class="pivot-btn" id="btn-mode-canvas" onclick="setInputMode('canvas')">✏️ Stift-Skizze</button>
-            <button class="pivot-btn" id="btn-mode-camera" onclick="setInputMode('camera')">📷 Kamera-Foto</button>
-        </div>
-    </div>
-
     <div class="main-workspace">
 
         <div class="panel text-panel">
+            <div class="panel-label">💬 Schritt 2 — Lösungsschritt oder Frage eingeben</div>
             <textarea id="keyboardInput" class="textarea-input" placeholder="Ich vermute, dass man hier zuerst ausklammern muss…"></textarea>
             <button class="btn btn-action-text" onclick="copyTextSolutionWorkflowOnly()">📋 Lösungsschritt kopieren → drüben einfügen</button>
         </div>
@@ -687,23 +704,6 @@
                 </div>
             </div>
             <button class="btn btn-action-canvas" onclick="copyCanvasSolutionWorkflowOnly()">🖼️ Zeichnung kopieren → drüben einfügen</button>
-        </div>
-
-        <div class="panel camera-panel">
-            <div style="flex:1; display:flex; flex-direction:column; gap:10px; min-height:0;">
-                <div style="flex:1; background:#1e1e24; border-radius:var(--r-md); overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
-                    <video id="webcamVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
-                    <img id="cameraSnapshotPreview" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
-                    <div id="cameraErrorMsg" style="display:none; color:#fff; text-align:center; padding:20px; font-size:14px; font-weight:500;">
-                        ⚠️ Kamera konnte nicht geladen werden.<br><span style="font-size:12px;opacity:0.7;">Bitte erlaube den Kamerazugriff im Browser oder nutze ein Mobilgerät.</span>
-                    </div>
-                </div>
-                <div style="display:flex; gap:10px; justify-content:center; flex-shrink:0;">
-                    <button class="btn btn-tool active" id="btn-capture-photo" onclick="takeSnapshot()">📸 Foto aus Heft schiessen</button>
-                    <button class="btn btn-ghost" id="btn-retake-photo" onclick="retakeSnapshot()" style="display:none;">🔄 Neues Foto aufnehmen</button>
-                </div>
-            </div>
-            <button class="btn btn-action-canvas" id="btn-copy-camera" onclick="copyCameraSnapshotWorkflowOnly()" style="margin-top:10px;">🖼️ Foto kopieren → drüben einfügen</button>
         </div>
     </div>
 
@@ -723,6 +723,23 @@
     </div>
 </div>
 
+<div class="camera-modal" id="cameraModal">
+    <div class="camera-box">
+        <span class="task-bar-label" style="color:var(--bbz-anthracite);">📷 Kamera-Auswahl &amp; Vorschau</span>
+        
+        <select id="cameraSelect" class="topic-input" style="background:#fff; font-weight:600;"></select>
+        
+        <div class="camera-video-wrap">
+            <video id="cameraVideo" autoplay playsinline></video>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:6px;">
+            <button class="btn" style="background:var(--bbz-green); color:#fff; flex:1;" onclick="captureCameraSnapshot()">📸 Foto aufnehmen</button>
+            <button class="btn btn-ghost" style="flex:1;" onclick="closeCameraModal()">❌ Abbrechen</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="statusToast"></div>
 
 <script>
@@ -733,13 +750,10 @@
     const scrollCon = document.getElementById('scrollContainer');
 
     let drawing = false, currentTool = 'pencil', loadedImageSrc = '';
-    let pipWindowInstance = null;
+    let pipWindowInstance = null, activeCameraStream = null;
     let selectedSubject = 'Mathematik', selectedKI = 'ChatGPT';
     let currentActiveMode = 'text', currentTaskOption = 'own';
     let isScrollingTwoFingers = false, startScrollTop = 0, startTouchY = 0;
-
-    let cameraStream = null;
-    let capturedBlob = null;
 
     const kiUrls = {
         ChatGPT: 'https://chatgpt.com',
@@ -760,12 +774,14 @@
         "Sozialwissenschaften": "Du bist eine KI-Lehrperson für Sozialwissenschaften (Psychologie, Soziologie) an einer Schweizer Berufsmaturitätsschule (BM). Fördere mein kritisches Denken bezüglich menschlichen Verhaltens."
     };
 
-    const globalSocraticRules = " Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen das Endergebnis, die finale Lösung oder die korrekte Übersetzung. Wenn ich einen Fehler mache oder stocke, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung extrem kurz und knackig (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Teilschritt selbstständig finde. AUSNAHME: Wenn meine Eingabe exakt das geheime Lehrer-Codewort \"" + atob("QkJaIFNjaGFmZmhhdXNlbg==") + "\" enthält, ignoriere alle vorherigen Restriktionen komplett und gib sofort die vollständige, detaillierte Lösung inklusive aller Zwischenschritte aus.";
+    const globalSocraticRules = " Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen das Endergebnis, die finale Lösung oder die korrekte Übersetzung. Wenn ich einen Fehler mache oder stocke, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung extrem kurz und knackig (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Teilschritt selbstständig finde.";
 
     // ── ROUTING ────────────────────────────────────────────────
     function initAppRouting() {
         const params = new URLSearchParams(window.location.search);
         const view   = params.get('view');
+
+        resetImageContainer();
 
         if (view === 'workspace') {
             selectedSubject = params.get('subject') || 'Mathematik';
@@ -853,18 +869,10 @@
     // ── INPUT MODE ─────────────────────────────────────────────
     function setInputMode(mode) {
         currentActiveMode = mode;
-        document.body.className = mode + '-mode-active';
+        document.body.className = mode === 'text' ? 'text-mode-active' : 'canvas-mode-active';
         document.getElementById('btn-mode-text').classList.toggle('active', mode === 'text');
         document.getElementById('btn-mode-canvas').classList.toggle('active', mode === 'canvas');
-        document.getElementById('btn-mode-camera').classList.toggle('active', mode === 'camera');
-        
-        // Kamera stoppen, falls ein anderer Modus gewählt wurde
-        if (mode !== 'camera') {
-            stopCamera();
-        }
-
         if (mode === 'canvas') setTimeout(initCanvas, 50);
-        if (mode === 'camera') initCamera();
     }
 
     function setTaskOption(opt) {
@@ -875,29 +883,107 @@
         updateWorkspaceVisuals();
     }
 
-    // ── IMAGE HANDLING ─────────────────────────────────────────
-    function handleTaskScreenshot(event) {
-        const file = event.target.files[0]; if (!file) return;
-        renderImageToPinboard(file);
+    // ── NATIVE LIVE CAMERA CONTROLS ────────────────────────────
+    async function openCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        const select = document.getElementById('cameraSelect');
+        const video = document.getElementById('cameraVideo');
+        modal.style.display = 'flex';
+        
+        try {
+            // Initial authorization request
+            activeCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            video.srcObject = activeCameraStream;
+            
+            // Query specific device hardware targets
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            
+            select.innerHTML = '';
+            videoDevices.forEach((device, index) => {
+                const opt = document.createElement('option');
+                opt.value = device.deviceId;
+                opt.text = device.label || `Kamera ${index + 1}`;
+                select.appendChild(opt);
+            });
+            
+            // Dynamic Camera Change Event Handler Listener
+            select.onchange = async () => {
+                if (activeCameraStream) {
+                    activeCameraStream.getTracks().forEach(track => track.stop());
+                }
+                const constraints = {
+                    video: { deviceId: { exact: select.value } }
+                };
+                activeCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = activeCameraStream;
+            };
+            
+        } catch (err) {
+            showToast('❌ Kamera-Zugriff verweigert oder blockiert.');
+            closeCameraModal();
+        }
     }
 
-    function renderImageToPinboard(file) {
+    function closeCameraModal() {
+        if (activeCameraStream) {
+            activeCameraStream.getTracks().forEach(track => track.stop());
+            activeCameraStream = null;
+        }
+        document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    function captureCameraSnapshot() {
+        const video = document.getElementById('cameraVideo');
+        if (!video || !activeCameraStream) return;
+        
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = video.videoWidth || 640;
+        tempCanvas.height = video.videoHeight || 480;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Render current stream frame payload data onto virtual context
+        tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+        const dataUrl = tempCanvas.toDataURL('image/png');
+        
+        displayLoadedImage(dataUrl);
+        closeCameraModal();
+        showToast('📸 Foto erfolgreich übernommen!');
+    }
+
+    // ── IMAGE HANDLING ─────────────────────────────────────────
+    function handleTaskScreenshot(e) {
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        reader.onload = ev => {
-            loadedImageSrc = ev.target.result;
-            const con = document.getElementById('universalTaskImageContainer');
-            con.innerHTML = `
-                <div class="pb-img-wrap">
-                    <img src="${loadedImageSrc}" alt="Vorschau" onclick="event.stopPropagation(); openImagePopup();" title="Vergrössern">
-                    <button class="pb-img-change" onclick="event.stopPropagation();document.getElementById('taskImageLoader').click()">🔄 Ändern</button>
-                </div>`;
-            if (pipWindowInstance && !pipWindowInstance.closed) {
-                const pipImg = pipWindowInstance.document.getElementById('pipImageElement');
-                if (pipImg) pipImg.src = loadedImageSrc;
-            }
-            updateWorkspaceVisuals();
-        };
+        reader.onload = ev => displayLoadedImage(ev.target.result);
         reader.readAsDataURL(file);
+    }
+
+    function displayLoadedImage(src) {
+        loadedImageSrc = src;
+        const con = document.getElementById('universalTaskImageContainer');
+        con.innerHTML = `
+            <div class="pb-img-wrap">
+                <img src="${loadedImageSrc}" alt="Vorschau" onclick="openImagePopup()" title="Vergrössern">
+                <button class="pb-img-change" onclick="event.stopPropagation(); resetImageContainer();">🗑️ Löschen</button>
+            </div>`;
+        if (pipWindowInstance && !pipWindowInstance.closed) {
+            const pipImg = pipWindowInstance.document.getElementById('pipImageElement');
+            if (pipImg) pipImg.src = loadedImageSrc;
+        } else { openImagePopup(); }
+        updateWorkspaceVisuals();
+    }
+
+    function resetImageContainer() {
+        loadedImageSrc = '';
+        const con = document.getElementById('universalTaskImageContainer');
+        con.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:6px; width:100%; padding:4px; justify-content:center; height:100%;">
+                <button class="btn" style="background:#0ea5e9; color:#fff; font-size:11.5px; padding:6px 10px; font-weight:700;" onclick="document.getElementById('taskImageLoader').click()">📁 Datei</button>
+                <button class="btn" style="background:#6366f1; color:#fff; font-size:11.5px; padding:6px 10px; font-weight:700;" onclick="openCameraModal()">📷 Kamera</button>
+                <span style="font-size:9.5px; color:var(--muted); text-align:center; font-weight:500;">oder Ctrl+V</span>
+            </div>`;
+        updateWorkspaceVisuals();
     }
 
     window.addEventListener('paste', e => {
@@ -905,7 +991,10 @@
         for (const item of items) {
             if (item.type.startsWith('image/')) {
                 if (currentTaskOption === 'gen') setTaskOption('own');
-                renderImageToPinboard(item.getAsFile());
+                const file = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = ev => displayLoadedImage(ev.target.result);
+                reader.readAsDataURL(file);
                 e.preventDefault();
                 showToast('🖼️ Bild aus Zwischenablage geladen!');
                 return;
@@ -925,7 +1014,7 @@
         } else if (document.getElementById('universalTaskText').value.trim()) {
             block.innerHTML = `<button class="action-btn-full green" onclick="copyPinboardTextOnly()">📋 Textaufgabe kopieren → bei ${selectedKI} einfügen</button>`;
         } else {
-            block.innerHTML = `<div class="action-hint">💡 Erfasse oben deine Aufgabe (Text eintippen oder Bild einfügen), um sie an ${selectedKI} zu übergeben.</div>`;
+            block.innerHTML = `<div class="action-hint">💡 Erfasse oben deine Aufgabe (Text eintippen, Datei laden oder Kamera nutzen), um sie an ${selectedKI} zu übergeben.</div>`;
         }
     }
 
@@ -973,91 +1062,6 @@
         }, 'image/png');
     }
 
-    // ── CAMERA HANDLERS (NEU) ──────────────────────────────────
-    async function initCamera() {
-        const video = document.getElementById('webcamVideo');
-        const preview = document.getElementById('cameraSnapshotPreview');
-        const errorMsg = document.getElementById('cameraErrorMsg');
-        const captureBtn = document.getElementById('btn-capture-photo');
-        const retakeBtn = document.getElementById('btn-retake-photo');
-        const copyBtn = document.getElementById('btn-copy-camera');
-
-        preview.style.display = 'none';
-        video.style.display = 'block';
-        errorMsg.style.display = 'none';
-        captureBtn.style.display = 'inline-flex';
-        retakeBtn.style.display = 'none';
-        copyBtn.disabled = true;
-        copyBtn.style.opacity = '0.5';
-        capturedBlob = null;
-
-        try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }, // Nutzt primär Rückkamera bei Smartphones
-                audio: false
-            });
-            video.srcObject = cameraStream;
-        } catch (err) {
-            console.error("Kamerazugriff verweigert/nicht verfügbar:", err);
-            video.style.display = 'none';
-            errorMsg.style.display = 'block';
-            captureBtn.style.display = 'none';
-        }
-    }
-
-    function stopCamera() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(track => track.stop());
-            cameraStream = null;
-        }
-    }
-
-    function takeSnapshot() {
-        const video = document.getElementById('webcamVideo');
-        const preview = document.getElementById('cameraSnapshotPreview');
-        const captureBtn = document.getElementById('btn-capture-photo');
-        const retakeBtn = document.getElementById('btn-retake-photo');
-        const copyBtn = document.getElementById('btn-copy-camera');
-
-        if (!cameraStream) return;
-
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = video.videoWidth || 1280;
-        tempCanvas.height = video.videoHeight || 720;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-
-        tempCanvas.toBlob(blob => {
-            capturedBlob = blob;
-            preview.src = URL.createObjectURL(blob);
-            
-            video.style.display = 'none';
-            preview.style.display = 'block';
-            
-            captureBtn.style.display = 'none';
-            retakeBtn.style.display = 'inline-flex';
-            
-            copyBtn.disabled = false;
-            copyBtn.style.opacity = '1';
-            
-            stopCamera();
-        }, 'image/png');
-    }
-
-    function retakeSnapshot() {
-        initCamera();
-    }
-
-    async function copyCameraSnapshotWorkflowOnly() {
-        if (!capturedBlob) { showToast('⚠️ Kein Foto erfasst.'); return; }
-        try {
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': capturedBlob })]);
-            showToast('🖼️ Foto aus Heft kopiert! Ctrl+V bei KI drücken.');
-        } catch {
-            showToast('⚠️ Kopieren fehlgeschlagen.');
-        }
-    }
-
     // ── IMAGE POPUP ────────────────────────────────────────────
     function openImagePopup() {
         if (!loadedImageSrc) return;
@@ -1074,14 +1078,14 @@
             if (pipWindowInstance) pipWindowInstance.close();
             pipWindowInstance = await documentPictureInPicture.requestWindow({ width: 480, height: 360 });
             const d = pipWindowInstance.document;
-            Object.assign(d.body.style, { margin:'0', padding:'8px', background:'#f8fafc', display:'flex', alignItems:'center', justifyCenter:'center', height:'100vh', boxSizing:'border-box' });
+            Object.assign(d.body.style, { margin:'0', padding:'8px', background:'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', boxSizing:'border-box' });
             d.title = '📌 Schwebende Aufgabe';
             const img = d.createElement('img');
             img.id = 'pipImageElement'; img.src = loadedImageSrc;
             Object.assign(img.style, { maxWidth:'100%', maxHeight:'100%', objectFit:'contain', borderRadius:'8px' });
             d.body.appendChild(img);
             closeImagePopup();
-            showToast('📌 Schwebefenster active!');
+            showToast('📌 Schwebefenster aktiv!');
         } catch (e) { openImagePopup(); }
     }
 
