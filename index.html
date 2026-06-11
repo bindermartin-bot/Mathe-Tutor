@@ -3,110 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Socratic Tutoring V2</title>
+<title>Socratic Tutoring V5 PRO</title>
 
 <style>
 :root {
-    --primary: #469542;
-    --dark: #32323e;
-    --bg: #eef1f6;
+    --green:#469542;
+    --dark:#32323e;
+    --bg:#eef1f6;
 }
 
-body {
-    margin: 0;
-    font-family: Inter, Arial;
-    background: var(--bg);
-    min-height: 100dvh;
+body{
+    margin:0;
+    font-family:Arial;
+    background:var(--bg);
+    min-height:100dvh;
 }
 
 /* Layout */
-.screen {
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:30px;
 }
 
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,.1);
-    width: 100%;
-    max-width: 700px;
-}
-
-/* Buttons */
-button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-button.secondary {
-    background: var(--dark);
-}
-
-button:hover {
-    opacity: 0.9;
+/* Cards */
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,.1);
+    width:100%;
+    max-width:800px;
 }
 
 /* Grid */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
-    gap: 10px;
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
 }
 
-/* Inputs */
-textarea {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+/* Buttons */
+button{
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    background:var(--green);
+    color:#fff;
+    cursor:pointer;
+    font-weight:600;
+}
+
+button.secondary{
+    background:var(--dark);
+}
+
+/* Textarea */
+textarea{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    min-height:100px;
 }
 
 /* Image */
-#imageBox img {
-    width: 100%;
-    max-width: 300px;
-    margin-top: 10px;
-    cursor: zoom-in;
+#imageBox img{
+    max-width:300px;
+    cursor:zoom-in;
+    margin-top:10px;
 }
 
 /* Popup */
-#popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
+#popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    justify-content:center;
+    align-items:center;
 }
-
-#popup img {
-    max-width: 90%;
-    max-height: 90%;
+#popup img{
+    max-width:90%;
+    max-height:90%;
 }
 
 /* Toast */
-#toast {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: #32323e;
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    display: none;
+#toast{
+    position:fixed;
+    bottom:20px;
+    left:20px;
+    background:#32323e;
+    color:white;
+    padding:10px 15px;
+    border-radius:8px;
+    display:none;
 }
+
 </style>
 </head>
 
@@ -114,41 +108,47 @@ textarea {
 
 <!-- ✅ SCREEN 1 -->
 <div id="screen1" class="screen">
-    <div class="card">
-        <h1>Socratic Tutoring</h1>
-        <p>Wähle dein Fach:</p>
+<div class="card">
+<h1>Socratic Tutoring</h1>
+<p>Fach wählen:</p>
 
-        <div class="grid">
-            <button onclick="selectSubject('Mathematik')">Mathe</button>
-            <button onclick="selectSubject('Deutsch')">Deutsch</button>
-            <button onclick="selectSubject('Englisch')">Englisch</button>
-        </div>
-    </div>
+<div class="grid">
+<button onclick="selectSubject('Deutsch')">Deutsch</button>
+<button onclick="selectSubject('Französisch')">Französisch</button>
+<button onclick="selectSubject('Englisch')">Englisch</button>
+<button onclick="selectSubject('Mathematik')">Mathematik</button>
+<button onclick="selectSubject('Geschichte')">Geschichte</button>
+<button onclick="selectSubject('Wirtschaft und Recht')">W&R</button>
+<button onclick="selectSubject('Biologie')">Biologie</button>
+<button onclick="selectSubject('Physik')">Physik</button>
+<button onclick="selectSubject('Chemie')">Chemie</button>
+<button onclick="selectSubject('Sozialwissenschaften')">Sozial</button>
+</div>
+</div>
 </div>
 
 <!-- ✅ SCREEN 2 -->
 <div id="screen2" class="screen" style="display:none;">
-    <div class="card">
-        <h2 id="subjectTitle"></h2>
+<div class="card">
+<h2 id="subjectTitle"></h2>
 
-        <textarea id="taskInput" placeholder="Aufgabe einfügen..."></textarea>
+<textarea id="taskText" placeholder="Aufgabe eingeben..."></textarea>
 
-        <br><br>
+<br>
+<input type="file" id="imageInput">
+<div id="imageBox"></div>
 
-        <input type="file" id="imageInput">
+<br>
 
-        <div id="imageBox"></div>
-
-        <br>
-
-        <button onclick="copyTask()">📋 Aufgabe kopieren</button>
-        <button class="secondary" onclick="openKI()">🤖 KI öffnen</button>
-    </div>
+<button onclick="copyTask()">📋 Aufgabe kopieren</button>
+<button onclick="openKI()">🤖 KI öffnen</button>
+<button class="secondary" onclick="goBack()">↩ Zurück</button>
+</div>
 </div>
 
 <!-- ✅ Popup -->
 <div id="popup" onclick="closePopup()">
-    <img id="popupImg">
+<img id="popupImg">
 </div>
 
 <!-- ✅ Toast -->
@@ -156,26 +156,28 @@ textarea {
 
 <script>
 
+/* ✅ STATE */
 const appState = {
-    subject: "",
-    image: null
+    subject:null,
+    image:null
 };
 
-const kiURL = "https://chatgpt.com";
+/* ✅ SUBJECT */
+function selectSubject(subject){
+    appState.subject = subject;
 
-
-// ✅ Subject wählen
-function selectSubject(s){
-    appState.subject = s;
-
-    document.getElementById("screen1").style.display = "none";
-    document.getElementById("screen2").style.display = "flex";
-
-    document.getElementById("subjectTitle").innerText = s;
+    document.getElementById("screen1").style.display="none";
+    document.getElementById("screen2").style.display="flex";
+    document.getElementById("subjectTitle").innerText=subject;
 }
 
+/* ✅ BACK */
+function goBack(){
+    document.getElementById("screen1").style.display="flex";
+    document.getElementById("screen2").style.display="none";
+}
 
-// ✅ Image Upload (FIXED)
+/* ✅ IMAGE FIXED */
 document.getElementById("imageInput").addEventListener("change", e=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -185,65 +187,69 @@ document.getElementById("imageInput").addEventListener("change", e=>{
         appState.image = ev.target.result;
 
         document.getElementById("imageBox").innerHTML = `
-            <img src="${appState.image}" 
-                 title="Klicken zum Vergrössern"
-                 onclick="openPopup()pup(){
+            <img src="${appState.image}"
+                 onclick="openPopup()"
+                 title="Kon openPopup(){
     if(!appState.image){
-        showToast("⚠️ Kein Bild");
+        showToast("⚠️ Kein Bild geladen");
+        return;
+    }
+    document.getElementById("popupImg").src = appState.image;
+    document.getElementById("popup").style.display="flex";
+}
+function closePopup(){
+    document.getElementById("popup").style.display="none";
+}
+
+/* ✅ COPY */
+async function safeCopy(text){
+    if(!navigator.clipboard){
+        prompt("Kopieren:",text);
         return;
     }
 
-    document.getElementById("popupImg").src = appState.image;
-    document.getElementById("popup").style.display = "flex";
+    try{
+        await navigator.clipboard.writeText(text);
+        showToast("✅ Kopiert!");
+    }catch{
+        prompt("Kopieren:",text);
+    }
 }
 
-function closePopup(){
-    document.getElementById("popup").style.display = "none";
-}
+function copyTask(){
+    const txt = document.getElementById("taskText").value.trim();
 
-
-// ✅ Copy Task
-async function copyTask(){
-    const text = document.getElementById("taskInput").value;
+    if(!txt){
+        showToast("⚠️ Kein Text");
+        return;
+    }
 
     const prompt = `
 [AUFGABE]
-${text}
+${txt}
 
-Bitte stelle mir Fragen und gib keine Lösung.
+Bitte stelle Fragen und löse nicht direkt.
 `;
 
-    try{
-        await navigator.clipboard.writeText(prompt);
-        showToast("✅ Kopiert!");
-    }catch{
-        promptFallback(prompt);
-    }
+    safeCopy(prompt);
 }
 
-
-// ✅ KI öffnen
+/* ✅ KI öffnen */
 function openKI(){
-    const w = window.open(kiURL);
+    const w = window.open("https://chatgpt.com");
+
     if(!w){
-        alert("Popup blockiert!");
+        showToast("⚠️ Popups blockiert");
     }
 }
 
-
-// ✅ Toast
+/* ✅ TOAST */
 function showToast(msg){
-    const t = document.getElementById("toast");
-    t.innerText = msg;
-    t.style.display = "block";
+    const t=document.getElementById("toast");
+    t.innerText=msg;
+    t.style.display="block";
 
-    setTimeout(()=> t.style.display="none",2000);
-}
-
-
-// ✅ Fallback Copy
-function promptFallback(text){
-    prompt("Kopieren:", text);
+    setTimeout(()=>t.style.display="none",2000);
 }
 
 </script>
