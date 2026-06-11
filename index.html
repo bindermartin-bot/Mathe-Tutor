@@ -1,171 +1,252 @@
-<!-- NUR DIE WICHTIGSTEN GEÄNDERTEN STELLEN GEZEIGT -->
-<!-- (der Rest bleibt wie bei dir – ich schreibe nur die relevanten Änderungen sauber neu) -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Socratic Tutoring V2</title>
 
 <style>
-body {
-    min-height: 100dvh; /* ✅ FIX mobile */
-    overflow-y: auto;
+:root {
+    --primary: #469542;
+    --dark: #32323e;
+    --bg: #eef1f6;
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to   { opacity: 1; transform: scale(1); }
+
+body {
+    margin: 0;
+    font-family: Inter, Arial;
+    background: var(--bg);
+    min-height: 100dvh;
+}
+
+/* Layout */
+.screen {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.1);
+    width: 100%;
+    max-width: 700px;
+}
+
+/* Buttons */
+button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+button.secondary {
+    background: var(--dark);
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+    gap: 10px;
+}
+
+/* Inputs */
+textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* Image */
+#imageBox img {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 10px;
+    cursor: zoom-in;
+}
+
+/* Popup */
+#popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#popup img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+/* Toast */
+#toast {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #32323e;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    display: none;
 }
 </style>
+</head>
+
+<body>
+
+<!-- ✅ SCREEN 1 -->
+<div id="screen1" class="screen">
+    <div class="card">
+        <h1>Socratic Tutoring</h1>
+        <p>Wähle dein Fach:</p>
+
+        <div class="grid">
+            <button onclick="selectSubject('Mathematik')">Mathe</button>
+            <button onclick="selectSubject('Deutsch')">Deutsch</button>
+            <button onclick="selectSubject('Englisch')">Englisch</button>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ SCREEN 2 -->
+<div id="screen2" class="screen" style="display:none;">
+    <div class="card">
+        <h2 id="subjectTitle"></h2>
+
+        <textarea id="taskInput" placeholder="Aufgabe einfügen..."></textarea>
+
+        <br><br>
+
+        <input type="file" id="imageInput">
+
+        <div id="imageBox"></div>
+
+        <br>
+
+        <button onclick="copyTask()">📋 Aufgabe kopieren</button>
+        <button class="secondary" onclick="openKI()">🤖 KI öffnen</button>
+    </div>
+</div>
+
+<!-- ✅ Popup -->
+<div id="popup" onclick="closePopup()">
+    <img id="popupImg">
+</div>
+
+<!-- ✅ Toast -->
+<div id="toast"></div>
 
 <script>
 
 const appState = {
-    drawing: false,
-    tool: 'pencil',
-    selectedSubject: 'Mathematik',
-    selectedKI: 'ChatGPT',
-    mode: 'text',
-    taskOption: 'own',
-    loadedImageSrc: '',
-    savedCanvas: null
+    subject: "",
+    image: null
 };
 
-/* ✅ SICHERER: kein geheimes Passwort mehr */
-const globalSocraticRules = `
-Analysiere meine Eingabe Schritt für Schritt.
-Verrate mir unter keinen Umständen die Lösung.
-Antworte extrem kurz (max. 2–3 Sätze).
-Stelle eine präzise Frage oder gib einen minimalen Hinweis.
+const kiURL = "https://chatgpt.com";
+
+
+// ✅ Subject wählen
+function selectSubject(s){
+    appState.subject = s;
+
+    document.getElementById("screen1").style.display = "none";
+    document.getElementById("screen2").style.display = "flex";
+
+    document.getElementById("subjectTitle").innerText = s;
+}
+
+
+// ✅ Image Upload (FIXED)
+document.getElementById("imageInput").addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ev=>{
+        appState.image = ev.target.result;
+
+        document.getElementById("imageBox").innerHTML = `
+            <img src="${appState.image}" 
+                 title="Klicken zum Vergrössern"
+                 onclick="openPopup()pup(){
+    if(!appState.image){
+        showToast("⚠️ Kein Bild");
+        return;
+    }
+
+    document.getElementById("popupImg").src = appState.image;
+    document.getElementById("popup").style.display = "flex";
+}
+
+function closePopup(){
+    document.getElementById("popup").style.display = "none";
+}
+
+
+// ✅ Copy Task
+async function copyTask(){
+    const text = document.getElementById("taskInput").value;
+
+    const prompt = `
+[AUFGABE]
+${text}
+
+Bitte stelle mir Fragen und gib keine Lösung.
 `;
 
-
-// ✅ ROBUSTES COPY
-async function safeCopy(text) {
-    if (!navigator.clipboard) {
-        window.prompt('Kopieren:', text);
-        return;
-    }
-    try {
-        await navigator.clipboard.writeText(text);
-        showToast('📋 Kopiert!');
-    } catch {
-        window.prompt('Kopieren:', text);
+    try{
+        await navigator.clipboard.writeText(prompt);
+        showToast("✅ Kopiert!");
+    }catch{
+        promptFallback(prompt);
     }
 }
 
 
-// ✅ FIX: KEIN AUTO-POPUP MEHR
-function renderImageToPinboard(file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-        appState.loadedImageSrc = ev.target.result;
-
-        const con = document.getElementById('universalTaskImageContainer');
-
-        con.innerHTML = `
-        <div class="pb-img-wrap" style="animation:fadeIn .2s ease;">
-            <img src="${appState.loadedImageSrc}"
-                 onclick="event.stopPropagation(); openImagePopup();"
-                 title="Klicken zum Vergrössern"
-                 style="ck()">
-                🔄 Ändern
-            </button>
-        </div>`;
-
-        updateWorkspaceVisuals();
-    };
-    reader.readAsDataURL(file);
-}
-
-
-// ✅ FIX: POPUP CHECK
-function openImagePopup() {
-    if (!appState.loadedImageSrc) {
-        showToast("⚠️ Kein Bild geladen");
-        return;
-    }
-    document.getElementById('popupTargetImage').src = appState.loadedImageSrc;
-    document.getElementById('draggableWindow').style.display = 'flex';
-}
-
-
-// ✅ WINDOW OPEN SICHER
-function openKIWindow(url, name, specs) {
-    const win = window.open(url, name, specs);
-    if (!win) {
-        alert("⚠️ Popup blockiert – bitte Popups erlauben!");
+// ✅ KI öffnen
+function openKI(){
+    const w = window.open(kiURL);
+    if(!w){
+        alert("Popup blockiert!");
     }
 }
 
 
-// ✅ RESIZE-SAFE CANVAS
-function saveCanvas() {
-    appState.savedCanvas = canvas.toDataURL();
-}
+// ✅ Toast
+function showToast(msg){
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.style.display = "block";
 
-function restoreCanvas() {
-    if (!appState.savedCanvas) return;
-
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
-    img.src = appState.savedCanvas;
-}
-
-function initCanvas() {
-    if (appState.mode !== 'canvas') return;
-
-    saveCanvas();
-
-    canvas.width  = wrapper.offsetWidth || 450;
-    canvas.height = 2400;
-
-    redrawEverything();
-    restoreCanvas();
+    setTimeout(()=> t.style.display="none",2000);
 }
 
 
-// ✅ UPDATE STATE sauberer
-function setInputMode(mode) {
-    appState.mode = mode;
-
-    document.body.className =
-        mode === 'text'
-        ? 'text-mode-active'
-        : 'canvas-mode-active';
-
-    if (mode === 'canvas') setTimeout(initCanvas, 50);
-}
-
-
-// ✅ TASK OPTION STATE
-function setTaskOption(opt) {
-    appState.taskOption = opt;
-    updateWorkspaceVisuals();
-}
-
-
-// ✅ BESSERE WINDOW OPEN NUTZUNG
-async function copyPromptAndOpenKIWindow() {
-    let prompt = subjectPrompts[appState.selectedSubject] + globalSocraticRules;
-
-    await safeCopy(prompt);
-
-    const w = Math.floor(screen.availWidth * 0.34);
-    openKIWindow(kiUrls[appState.selectedKI],
-        'ki_window',
-        `width=${w},height=${screen.availHeight}`);
-}
-
-
-// ✅ CLEAN COPY FUNKTIONEN
-async function copyPinboardTextOnly() {
-    const txt = document.getElementById('universalTaskText').value.trim();
-    if (!txt) return showToast("⚠️ Kein Text");
-    await safeCopy(`[AUFGABE]\n${txt}`);
-}
-
-
-// ✅ TOAST bleibt gleich (gut!)
-function showToast(msg) {
-    const t = document.getElementById('statusToast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2600);
+// ✅ Fallback Copy
+function promptFallback(text){
+    prompt("Kopieren:", text);
 }
 
 </script>
+
+</body>
+</html>
