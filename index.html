@@ -3,87 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Socratic Tutoring V6 PRO</title>
+<title>Socratic Tutoring V6 FINAL</title>
 
 <style>
 body {
-    margin: 0;
+    margin:0;
     font-family: Arial, sans-serif;
-    background: #eef1f6;
+    background:#eef1f6;
 }
 
-/* Layout */
 .screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 25px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
 }
 
-/* Grid */
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    max-width: 700px;
-    width: 100%;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:10px;
+    max-width:700px;
+    width:100%;
 }
 
-/* Buttons */
 button {
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background: #469542;
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-}
-button.secondary {
-    background: #32323e;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    background:#469542;
+    color:white;
+    cursor:pointer;
 }
 
-/* Inputs */
 textarea {
-    width: 100%;
-    max-width: 600px;
-    height: 120px;
-    margin-top: 10px;
+    width:100%;
+    max-width:600px;
+    height:120px;
 }
 
 /* Image */
 #imageBox img {
-    max-width: 300px;
-    margin-top: 10px;
-    cursor: zoom-in;
+    max-width:300px;
+    cursor:zoom-in;
+    margin-top:10px;
 }
 
 /* Canvas */
 canvas {
-    border: 1px solid #ccc;
-    background: white;
-    margin-top: 10px;
+    border:1px solid #ccc;
+    background:white;
+    margin-top:10px;
 }
 
 /* Popup */
 #popup {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    justify-content:center;
+    align-items:center;
 }
 #popup img {
-    max-width: 90%;
-    max-height: 90%;
+    max-width:90%;
 }
 </style>
 </head>
 
 <body>
 
-<!-- START SCREEN -->
+<!-- START -->
 <div id="screen1" class="screen">
     <h1>Socratic Tutoring</h1>
     <p>Fach wählen:</p>
@@ -98,22 +88,19 @@ canvas {
         <button onclick="selectSubject('Biologie')">Biologie</button>
         <button onclick="selectSubject('Physik')">Physik</button>
         <button onclick="selectSubject('Chemie')">Chemie</button>
-        <button onclick="selectSubject('Sozialwissenschaften')">Sozial</button>
     </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="screen2" class="screen" style="display:none;">
     <h2 id="subjectTitle"></h2>
 
-    <textarea id="taskText" placeholder="Aufgabe hier eingeben..."></textarea>
+    <textarea id="taskText" placeholder="Aufgabe eingeben..."></textarea>
 
     <br>
 
     <input type="file" id="imageInput">
     <div id="imageBox"></div>
-
-    <br>
 
     <canvas id="canvas" width="500" height="300"></canvas>
 
@@ -121,31 +108,31 @@ canvas {
 
     <button onclick="copyText()">📋 Text kopieren</button>
     <button onclick="copyCanvas()">🖼️ Zeichnung kopieren</button>
-    <button onclick="openKI()">🤖 KI öffnen (Split)</button>
-    <button class="secondary" onclick="goBack()">↩ Zurück</button>
+    <button onclick="openKI()">🤖 KI öffnen</button>
+    <button onclick="goBack()">↩ Zurück</button>
 </div>
 
-<!-- IMAGE POPUP -->
+<!-- POPUP -->
 <div id="popup" onclick="closePopup()">
     <img id="popupImg">
 </div>
 
+<!-- ✅ SCRIPT AM ENDE = WICHTIG -->
 <script>
 
-/* GLOBAL STATE */
+/* STATE */
 const appState = {
-    subject: null,
-    image: null,
-    drawing: false
+    subject:null,
+    image:null,
+    drawing:false
 };
 
-/* SUBJECT SELECT */
+/* SUBJECT */
 function selectSubject(subject){
     appState.subject = subject;
 
     document.getElementById("screen1").style.display = "none";
     document.getElementById("screen2").style.display = "flex";
-
     document.getElementById("subjectTitle").innerText = subject;
 }
 
@@ -155,26 +142,31 @@ function goBack(){
     document.getElementById("screen2").style.display = "none";
 }
 
-/* IMAGE UPLOAD */
+/* IMAGE */
 document.getElementById("imageInput").addEventListener("change", function(e){
     const file = e.target.files[0];
-    if (!file) return;
+    if(!file) return;
 
     const reader = new FileReader();
+
     reader.onload = function(ev){
         appState.image = ev.target.result;
 
-        document.getElementById("imageBox").innerHTML = `
-            <img src="${appState.image}" onclick="openader.readAsDataURL(file);
+        document.getElementById("imageBox").innerHTML =
+            '<img src="'+appState.image+'" onclick="openPopup()">';
+    };
+
+    reader.readAsDataURL(file);
 });
 
 /* POPUP */
 function openPopup(){
-    if (!appState.image) return;
+    if(!appState.image) return;
 
     document.getElementById("popupImg").src = appState.image;
     document.getElementById("popup").style.display = "flex";
 }
+
 function closePopup(){
     document.getElementById("popup").style.display = "none";
 }
@@ -190,7 +182,7 @@ canvas.addEventListener("mousedown", function(e){
 });
 
 canvas.addEventListener("mousemove", function(e){
-    if (!appState.drawing) return;
+    if(!appState.drawing) return;
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
 });
@@ -200,44 +192,30 @@ canvas.addEventListener("mouseup", function(){
 });
 
 /* COPY TEXT */
-async function copyText(){
-    const text = document.getElementById("taskText").value;
+function copyText(){
+    const txt = document.getElementById("taskText").value;
 
-    try{
-        await navigator.clipboard.writeText(text);
-        alert("✅ Kopiert");
-    }catch{
-        prompt("Kopieren:", text);
-    }
+    navigator.clipboard.writeText(txt)
+    .then(()=>alert("Kopiert"))
+    .catch(()=>prompt("Kopieren:",txt));
 }
 
 /* COPY CANVAS */
 function copyCanvas(){
-    canvas.toBlob(async function(blob){
-        try{
-            await navigator.clipboard.write([
-                new ClipboardItem({'image/png': blob})
-            ]);
-            alert("✅ Bild kopiert");
-        }catch{
-            alert("Kopieren blockiert");
-        }
+    canvas.toBlob(function(blob){
+        navigator.clipboard.write([
+            new ClipboardItem({'image/png': blob})
+        ]);
+        alert("Bild kopiert");
     });
 }
 
-/* SPLIT SCREEN */
+/* KI */
 function openKI(){
-    const width = screen.width;
+    const w = screen.width;
 
-    const appWindow = window.open(window.location.href, "app",
-        `width=${width*0.6},height=${screen.height}`);
-
-    const kiWindow = window.open("https://chatgpt.com", "ki",
-        `width=${width*0.4},height=${screen.height},left=${width*0.6}`);
-
-    if (!kiWindow){
-        alert("⚠️ Popup blockiert – bitte erlauben");
-    }
+    window.open("https://chatgpt.com", "_blank",
+        `width=${w*0.4},height=${screen.height}`);
 }
 
 </script>
