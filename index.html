@@ -278,6 +278,14 @@
         }
         .btn-action-canvas:hover { background: #12302b; }
 
+        .btn-pb-upload {
+            background: #f1f5f9; border: 1px solid var(--border-strong);
+            padding: 6px 10px; font-family: var(--font); font-size: 12.5px;
+            font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--bbz-anthracite);
+            width: 88%; text-align: center; transition: var(--tr);
+        }
+        .btn-pb-upload:hover { background: var(--bbz-green); color: white; border-color: var(--bbz-green); }
+
         /* ── APP CONTAINER ──────────────────────────────── */
         #appContainer {
             display: none; position: fixed; inset: 0;
@@ -369,7 +377,7 @@
         .topic-input::placeholder { color: var(--muted-light); }
         .topic-input:focus { outline: none; border-color: var(--bbz-green); background: #fff; }
 
-        /* Pinboard (Optimiert für größere Vorschau) */
+        /* Pinboard */
         .pinboard {
             background: #fffdf4;
             border: 1.5px solid #e0c93a;
@@ -399,23 +407,17 @@
         .pb-right {
             flex: 1; border: 2px dashed var(--border-strong);
             background: #fff; border-radius: 8px;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
             position: relative; overflow: hidden;
-            transition: var(--tr); cursor: pointer;
-            min-width: 140px;
+            transition: var(--tr);
+            min-width: 155px;
         }
-        .pb-right:hover { border-color: var(--bbz-green); background: #f5fcf5; }
-        .pb-right-label {
-            color: var(--muted); font-size: 12px;
-            text-align: center; font-weight: 500;
-            pointer-events: none; padding: 6px;
-        }
+        .pb-right:hover { border-color: var(--bbz-green); }
+        
         .pb-img-wrap { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
         .pb-img-wrap img { max-width: 100%; max-height: 90%; object-fit: contain; cursor: zoom-in; border-radius: 4px; }
         .pb-img-change {
             position: absolute; bottom: 4px; right: 4px;
-            font-size: 10px; background: rgba(50,50,62,.85); color: #fff;
+            font-size: 10px; background: rgba(217,45,32,.9); color: #fff;
             border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer;
             font-family: var(--font); font-weight: 600;
         }
@@ -631,10 +633,20 @@
     <div class="pinboard">
         <div class="pb-left">
             <span class="pb-label">📌 Pinnwand — Text eingeben oder Bild einfügen (Ctrl+V)</span>
-            <textarea class="pb-textarea" id="universalTaskText" oninput="updateWorkspaceVisuals()" placeholder="Aufgabentext hier eingeben oder Bild per Ctrl+V einfügen…"></textarea>
+            <textarea class="pb-textarea" id="universalTaskText" oninput="updateWorkspaceVisuals()" placeholder="Aufgabentext hier eingeben, Bild per Ctrl+V einfügen oder rechts die Kamera nutzen…"></textarea>
         </div>
-        <div class="pb-right" id="universalTaskImageContainer" onclick="document.getElementById('taskImageLoader').click()">
-            <span class="pb-right-label">🖼️ Bild laden<br><span style="font-size:10px;opacity:.7;">oder <b>Ctrl + V</b></span></span>
+        
+        <div class="pb-right" id="universalTaskImageContainer">
+            <div id="pb-image-default" style="display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; width:100%; height:100%;">
+                <button class="btn-pb-upload" onclick="document.getElementById('taskImageLoader').click()">📁 Datei laden</button>
+                <button class="btn-pb-upload" onclick="startWebcamInline()">📷 Kamera</button>
+                <span style="font-size:10px; color:var(--muted); opacity:0.8;">oder <b>Ctrl + V</b></span>
+            </div>
+            <div id="pb-image-video-wrap" style="display:none; width:100%; height:100%; position:relative;">
+                <video id="webcamPreview" autoplay playsinline style="width:100%; height:100%; object-fit:cover; background:#000; border-radius:6px;"></video>
+                <button onclick="captureWebcamPhoto()" style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:var(--bbz-green); color:white; border:none; padding:4px 10px; font-size:11px; font-weight:700; border-radius:4px; cursor:pointer; white-space:nowrap; z-index:10;">📸 Foto</button>
+                <button onclick="stopWebcamInline()" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; width:18px; height:18px; font-size:10px; border-radius:50%; cursor:pointer; z-index:10;">✕</button>
+            </div>
         </div>
         <input type="file" id="taskImageLoader" accept="image/*" onchange="handleTaskScreenshot(event)" style="display:none;">
     </div>
@@ -691,7 +703,7 @@
     const scrollCon = document.getElementById('scrollContainer');
 
     let drawing = false, currentTool = 'pencil', loadedImageSrc = '';
-    let pipWindowInstance = null;
+    let pipWindowInstance = null, cameraStream = null;
     let selectedSubject = 'Mathematik', selectedKI = 'ChatGPT';
     let currentActiveMode = 'text', currentTaskOption = 'own';
     let isScrollingTwoFingers = false, startScrollTop = 0, startTouchY = 0;
@@ -780,11 +792,10 @@
         try {
             await navigator.clipboard.writeText(prompt);
         } catch {
-            // Fallback: show in alert for restricted browsers
             prompt && window.prompt('Prompt manuell kopieren (Ctrl+A, Ctrl+C):', prompt);
         }
 
-        // FEHLERBEHEBUNG: Schaltet den Button JETZT sofort frei, bevor eventuelle Popup-Blocker das Skript killen!
+        // Passwort-Bugfix: Unverzüglich freischalten, bevor Popupblocker eventuell stören
         unlockGuidanceNextBtn();
         showToast('📋 Prompt kopiert!');
 
@@ -795,7 +806,7 @@
             window.open(kiUrls[selectedKI] || 'https://chatgpt.com', 'ki_split_window',
                 `width=${w35},height=${h},left=${lft},top=0,resizable=yes,scrollbars=yes`);
         } catch (e) {
-            console.warn("KI-Fenster wurde vom Browser-Popupblocker abgefangen. Der Fortschritt wurde trotzdem freigeschaltet.");
+            console.warn("KI-Fenster blockiert. Schritt 2 wurde dennoch entsperrt.");
         }
     }
 
@@ -828,29 +839,90 @@
         updateWorkspaceVisuals();
     }
 
-    // ── IMAGE HANDLING ─────────────────────────────────────────
-    function handleTaskScreenshot(e) {
-        const file = e.target.files[0]; if (!file) return;
-        renderImageToPinboard(file);
+    // ── WEBCAM INTEGRATION ─────────────────────────────────────
+    async function startWebcamInline() {
+        if (currentTaskOption === 'gen') setTaskOption('own');
+        document.getElementById('pb-image-default').style.display = 'none';
+        document.getElementById('pb-image-video-wrap').style.display = 'block';
+        const video = document.getElementById('webcamPreview');
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } // Bevorzugt Rückkamera bei Tablets/Handys
+            });
+            video.srcObject = cameraStream;
+        } catch (e) {
+            showToast("❌ Kamera konnte nicht gestartet werden.");
+            stopWebcamInline();
+        }
     }
 
-    function renderImageToPinboard(file) {
+    function stopWebcamInline() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        const defaultBlock = document.getElementById('pb-image-default');
+        const videoBlock = document.getElementById('pb-image-video-wrap');
+        if(defaultBlock) defaultBlock.style.display = 'flex';
+        if(videoBlock) videoBlock.style.display = 'none';
+    }
+
+    function captureWebcamPhoto() {
+        const video = document.getElementById('webcamPreview');
+        if (!video || !cameraStream) return;
+        
+        const capCanvas = document.createElement('canvas');
+        capCanvas.width = video.videoWidth || 640;
+        capCanvas.height = video.videoHeight || 480;
+        const capCtx = capCanvas.getContext('2d');
+        capCtx.drawImage(video, 0, 0, capCanvas.width, capCanvas.height);
+        
+        loadedImageSrc = capCanvas.toDataURL('image/png');
+        stopWebcamInline();
+        displayLoadedImage();
+    }
+
+    // ── IMAGE DISPLAY & HANDLING ────────────────────────────────
+    function handleTaskScreenshot(e) {
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = ev => {
             loadedImageSrc = ev.target.result;
-            const con = document.getElementById('universalTaskImageContainer');
-            con.innerHTML = `
-                <div class="pb-img-wrap">
-                    <img src="${loadedImageSrc}" alt="Vorschau" onclick="openImagePopup()" title="Vergrössern">
-                    <button class="pb-img-change" onclick="event.stopPropagation();document.getElementById('taskImageLoader').click()">🔄 Ändern</button>
-                </div>`;
-            if (pipWindowInstance && !pipWindowInstance.closed) {
-                const pipImg = pipWindowInstance.document.getElementById('pipImageElement');
-                if (pipImg) pipImg.src = loadedImageSrc;
-            } else { openImagePopup(); }
-            updateWorkspaceVisuals();
+            displayLoadedImage();
         };
         reader.readAsDataURL(file);
+    }
+
+    function displayLoadedImage() {
+        const con = document.getElementById('universalTaskImageContainer');
+        con.innerHTML = `
+            <div class="pb-img-wrap">
+                <img src="${loadedImageSrc}" alt="Vorschau" onclick="openImagePopup()" title="Vergrössern">
+                <button class="pb-img-change" onclick="event.stopPropagation(); resetPinboardImageContainer();">✕ Löschen</button>
+            </div>`;
+        if (pipWindowInstance && !pipWindowInstance.closed) {
+            const pipImg = pipWindowInstance.document.getElementById('pipImageElement');
+            if (pipImg) pipImg.src = loadedImageSrc;
+        } else { openImagePopup(); }
+        updateWorkspaceVisuals();
+    }
+
+    function resetPinboardImageContainer() {
+        stopWebcamInline();
+        loadedImageSrc = '';
+        const con = document.getElementById('universalTaskImageContainer');
+        con.innerHTML = `
+            <div id="pb-image-default" style="display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; width:100%; height:100%;">
+                <button class="btn-pb-upload" onclick="document.getElementById('taskImageLoader').click()">📁 Datei laden</button>
+                <button class="btn-pb-upload" onclick="startWebcamInline()">📷 Kamera</button>
+                <span style="font-size:10px; color:var(--muted); opacity:0.8;">oder <b>Ctrl + V</b></span>
+            </div>
+            <div id="pb-image-video-wrap" style="display:none; width:100%; height:100%; position:relative;">
+                <video id="webcamPreview" autoplay playsinline style="width:100%; height:100%; object-fit:cover; background:#000; border-radius:6px;"></video>
+                <button onclick="captureWebcamPhoto()" style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:var(--bbz-green); color:white; border:none; padding:4px 10px; font-size:11px; font-weight:700; border-radius:4px; cursor:pointer; white-space:nowrap; z-index:10;">📸 Foto</button>
+                <button onclick="stopWebcamInline()" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; width:18px; height:18px; font-size:10px; border-radius:50%; cursor:pointer; z-index:10;">✕</button>
+            </div>`;
+        updateWorkspaceVisuals();
     }
 
     window.addEventListener('paste', e => {
@@ -858,9 +930,15 @@
         for (const item of items) {
             if (item.type.startsWith('image/')) {
                 if (currentTaskOption === 'gen') setTaskOption('own');
-                renderImageToPinboard(item.getAsFile());
+                const file = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    loadedImageSrc = ev.target.result;
+                    displayLoadedImage();
+                    showToast('🖼️ Bild aus Zwischenablage geladen!');
+                };
+                reader.readAsDataURL(file);
                 e.preventDefault();
-                showToast('🖼️ Bild aus Zwischenablage geladen!');
                 return;
             }
         }
@@ -878,7 +956,7 @@
         } else if (document.getElementById('universalTaskText').value.trim()) {
             block.innerHTML = `<button class="action-btn-full green" onclick="copyPinboardTextOnly()">📋 Textaufgabe kopieren → bei ${selectedKI} einfügen</button>`;
         } else {
-            block.innerHTML = `<div class="action-hint">💡 Erfasse oben deine Aufgabe (Text eintippen oder Bild einfügen), um sie an ${selectedKI} zu übergeben.</div>`;
+            block.innerHTML = `<div class="action-hint">💡 Erfasse oben deine Aufgabe (Text eintippen, Bild laden oder Kamera starten), um sie an ${selectedKI} zu übergeben.</div>`;
         }
     }
 
@@ -942,7 +1020,7 @@
             if (pipWindowInstance) pipWindowInstance.close();
             pipWindowInstance = await documentPictureInPicture.requestWindow({ width: 480, height: 360 });
             const d = pipWindowInstance.document;
-            Object.assign(d.body.style, { margin:'0', padding:'8px', background:'#f8fafc', display:'flex', alignItems:'center', justifycontent:'center', height:'100vh', boxSizing:'border-box' });
+            Object.assign(d.body.style, { margin:'0', padding:'8px', background:'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', boxSizing:'border-box' });
             d.title = '📌 Schwebende Aufgabe';
             const img = d.createElement('img');
             img.id = 'pipImageElement'; img.src = loadedImageSrc;
@@ -1040,8 +1118,10 @@
     // ── TOAST ──────────────────────────────────────────────────
     function showToast(msg) {
         const t = document.getElementById('statusToast');
-        t.textContent = msg; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 2600);
+        if(t) {
+            t.textContent = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2600);
+        }
     }
 
     window.addEventListener('load', initAppRouting);
