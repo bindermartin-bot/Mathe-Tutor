@@ -3,256 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Socratic Tutoring V5 PRO</title>
+<title>Socratic Tutoring V6</title>
 
 <style>
-:root {
-    --green:#469542;
-    --dark:#32323e;
-    --bg:#eef1f6;
-}
-
 body{
     margin:0;
     font-family:Arial;
-    background:var(--bg);
-    min-height:100dvh;
+    background:#eef1f6;
 }
 
-/* Layout */
 .screen{
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:30px;
-}
-
-/* Cards */
-.card{
-    background:#fff;
     padding:20px;
-    border-radius:12px;
-    box-shadow:0 8px 20px rgba(0,0,0,.1);
-    width:100%;
-    max-width:800px;
 }
 
-/* Grid */
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
     gap:10px;
+    max-width:700px;
 }
 
-/* Buttons */
 button{
     padding:10px;
     border:none;
     border-radius:8px;
-    background:var(--green);
+    background:#469542;
     color:#fff;
     cursor:pointer;
-    font-weight:600;
 }
 
-button.secondary{
-    background:var(--dark);
-}
-
-/* Textarea */
 textarea{
     width:100%;
-    padding:10px;
-    border-radius:8px;
+    max-width:600px;
+    height:120px;
+}
+
+canvas{
     border:1px solid #ccc;
-    min-height:100px;
+    background:white;
+    touch-action:none;
 }
 
-/* Image */
-#imageBox img{
-    max-width:300px;
-    cursor:zoom-in;
-    margin-top:10px;
-}
-
-/* Popup */
+/* popup */
 #popup{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,0.8);
     display:none;
+    background:rgba(0,0,0,0.8);
     justify-content:center;
     align-items:center;
 }
 #popup img{
     max-width:90%;
-    max-height:90%;
 }
-
-/* Toast */
-#toast{
-    position:fixed;
-    bottom:20px;
-    left:20px;
-    background:#32323e;
-    color:white;
-    padding:10px 15px;
-    border-radius:8px;
-    display:none;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- ✅ SCREEN 1 -->
+<!-- SCREEN 1 -->
 <div id="screen1" class="screen">
-<div class="card">
 <h1>Socratic Tutoring</h1>
-<p>Fach wählen:</p>
+<p>Fach wählen</p>
 
 <div class="grid">
+<button onclick="selectSubject('Mathematik')">Mathe</button>
 <button onclick="selectSubject('Deutsch')">Deutsch</button>
-<button onclick="selectSubject('Französisch')">Französisch</button>
 <button onclick="selectSubject('Englisch')">Englisch</button>
-<button onclick="selectSubject('Mathematik')">Mathematik</button>
+<button onclick="selectSubject('Französisch')">Französisch</button>
+<button onclick="selectSubject('Biologie')">Bio</button>
+<button onclick="selectSubject('Chemie')">Chemie</button>
+<button onclick="selectSubject('Physik')">Physik</button>
 <button onclick="selectSubject('Geschichte')">Geschichte</button>
 <button onclick="selectSubject('Wirtschaft und Recht')">W&R</button>
-<button onclick="selectSubject('Biologie')">Biologie</button>
-<button onclick="selectSubject('Physik')">Physik</button>
-<button onclick="selectSubject('Chemie')">Chemie</button>
-<button onclick="selectSubject('Sozialwissenschaften')">Sozial</button>
-</div>
 </div>
 </div>
 
-<!-- ✅ SCREEN 2 -->
+<!-- SCREEN 2 -->
 <div id="screen2" class="screen" style="display:none;">
-<div class="card">
 <h2 id="subjectTitle"></h2>
 
-<textarea id="taskText" placeholder="Aufgabe eingeben..."></textarea>
+<textarea id="taskText" placeholder="Aufgabe eingeben"></textarea>
 
 <br>
+
 <input type="file" id="imageInput">
 <div id="imageBox"></div>
 
 <br>
 
-<button onclick="copyTask()">📋 Aufgabe kopieren</button>
+<canvas id="canvas" width="500" height="300"></canvas>
+
+<br>
+
+<button onclick="copyText()">📋 Text kopieren</button>
+<button onclick="copyCanvas()">🖼️ Zeichnung kopieren</button>
 <button onclick="openKI()">🤖 KI öffnen</button>
-<button class="secondary" onclick="goBack()">↩ Zurück</button>
-</div>
 </div>
 
-<!-- ✅ Popup -->
+<!-- POPUP -->
 <div id="popup" onclick="closePopup()">
 <img id="popupImg">
 </div>
 
-<!-- ✅ Toast -->
-<div id="toast"></div>
-
 <script>
 
-/* ✅ STATE */
-const appState = {
+window.addEventListener("load", () => {
+
+const appState={
     subject:null,
-    image:null
+    image:null,
+    drawing:false
 };
 
-/* ✅ SUBJECT */
-function selectSubject(subject){
-    appState.subject = subject;
-
+/* Fach */
+window.selectSubject=(s)=>{
+    appState.subject=s;
     document.getElementById("screen1").style.display="none";
     document.getElementById("screen2").style.display="flex";
-    document.getElementById("subjectTitle").innerText=subject;
-}
+    document.getElementById("subjectTitle").innerText=s;
+};
 
-/* ✅ BACK */
-function goBack(){
-    document.getElementById("screen1").style.display="flex";
-    document.getElementById("screen2").style.display="none";
-}
-
-/* ✅ IMAGE FIXED */
+/* Bild */
 document.getElementById("imageInput").addEventListener("change", e=>{
-    const file = e.target.files[0];
-    if(!file) return;
+    const file=e.target.files[0];
+    if(!file)return;
 
-    const reader = new FileReader();
-    reader.onload = ev=>{
-        appState.image = ev.target.result;
+    const r=new FileReader();
+    r.onload=ev=>{
+        appState.image=ev.target.result;
+        imageBox.innerHTML=`<img src="${appState.image}" onclick="openPopup()" style="max-width:300px;p=()=>{
+    popupImg.src=appState.image;
+    popup.style.display="flex";
+};
 
-        document.getElementById("imageBox").innerHTML = `
-            <img src="${appState.image}"
-                 onclick="openPopup()"
-                 title="Kon openPopup(){
-    if(!appState.image){
-        showToast("⚠️ Kein Bild geladen");
-        return;
-    }
-    document.getElementById("popupImg").src = appState.image;
-    document.getElementById("popup").style.display="flex";
-}
-function closePopup(){
-    document.getElementById("popup").style.display="none";
-}
+window.closePopup=()=>popup.style.display="none";
 
-/* ✅ COPY */
-async function safeCopy(text){
-    if(!navigator.clipboard){
-        prompt("Kopieren:",text);
-        return;
-    }
+/* Canvas */
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-    try{
-        await navigator.clipboard.writeText(text);
-        showToast("✅ Kopiert!");
-    }catch{
-        prompt("Kopieren:",text);
-    }
-}
+canvas.addEventListener("mousedown", e=>{
+    appState.drawing=true;
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX,e.offsetY);
+});
 
-function copyTask(){
-    const txt = document.getElementById("taskText").value.trim();
+canvas.addEventListener("mousemove", e=>{
+    if(!appState.drawing)return;
+    ctx.lineTo(e.offsetX,e.offsetY);
+    ctx.stroke();
+});
 
-    if(!txt){
-        showToast("⚠️ Kein Text");
-        return;
-    }
+canvas.addEventListener("mouseup", ()=>appState.drawing=false);
 
-    const prompt = `
-[AUFGABE]
-${txt}
+/* Copy */
+window.copyText=async()=>{
+    const txt=taskText.value;
+    await navigator.clipboard.writeText(txt);
+    alert("Kopiert");
+};
 
-Bitte stelle Fragen und löse nicht direkt.
-`;
+window.copyCanvas=()=>{
+    canvas.toBlob(async b=>{
+        await navigator.clipboard.write([new ClipboardItem({"image/png":b})]);
+        alert("Bild kopiert");
+    });
+};
 
-    safeCopy(prompt);
-}
+/* Split */
+window.openKI=()=>{
+    const w=screen.width;
+    const left=window.open(window.location.href + "?app","app",
+        `width=${w*0.65},height=${screen.height}`);
 
-/* ✅ KI öffnen */
-function openKI(){
-    const w = window.open("https://chatgpt.com");
+    const right=window.open("https://chatgpt.com","ki",
+        `width=${w*0.35},height=${screen.height}`);
 
-    if(!w){
-        showToast("⚠️ Popups blockiert");
-    }
-}
+    if(!right) alert("Popup blockiert!");
+};
 
-/* ✅ TOAST */
-function showToast(msg){
-    const t=document.getElementById("toast");
-    t.innerText=msg;
-    t.style.display="block";
-
-    setTimeout(()=>t.style.display="none",2000);
-}
+});
 
 </script>
-
 </body>
 </html>
