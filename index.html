@@ -3,191 +3,244 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Socratic Tutoring V6</title>
+<title>Socratic Tutoring V6 PRO</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#eef1f6;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #eef1f6;
 }
 
-.screen{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:20px;
+/* Layout */
+.screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px;
 }
 
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:10px;
-    max-width:700px;
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    max-width: 700px;
+    width: 100%;
 }
 
-button{
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    background:#469542;
-    color:#fff;
-    cursor:pointer;
+/* Buttons */
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #469542;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+button.secondary {
+    background: #32323e;
 }
 
-textarea{
-    width:100%;
-    max-width:600px;
-    height:120px;
+/* Inputs */
+textarea {
+    width: 100%;
+    max-width: 600px;
+    height: 120px;
+    margin-top: 10px;
 }
 
-canvas{
-    border:1px solid #ccc;
-    background:white;
-    touch-action:none;
+/* Image */
+#imageBox img {
+    max-width: 300px;
+    margin-top: 10px;
+    cursor: zoom-in;
 }
 
-/* popup */
-#popup{
-    position:fixed;
-    inset:0;
-    display:none;
-    background:rgba(0,0,0,0.8);
-    justify-content:center;
-    align-items:center;
+/* Canvas */
+canvas {
+    border: 1px solid #ccc;
+    background: white;
+    margin-top: 10px;
 }
-#popup img{
-    max-width:90%;
+
+/* Popup */
+#popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+#popup img {
+    max-width: 90%;
+    max-height: 90%;
 }
 </style>
 </head>
 
 <body>
 
-<!-- SCREEN 1 -->
+<!-- START SCREEN -->
 <div id="screen1" class="screen">
-<h1>Socratic Tutoring</h1>
-<p>Fach wählen</p>
+    <h1>Socratic Tutoring</h1>
+    <p>Fach wählen:</p>
 
-<div class="grid">
-<button onclick="selectSubject('Mathematik')">Mathe</button>
-<button onclick="selectSubject('Deutsch')">Deutsch</button>
-<button onclick="selectSubject('Englisch')">Englisch</button>
-<button onclick="selectSubject('Französisch')">Französisch</button>
-<button onclick="selectSubject('Biologie')">Bio</button>
-<button onclick="selectSubject('Chemie')">Chemie</button>
-<button onclick="selectSubject('Physik')">Physik</button>
-<button onclick="selectSubject('Geschichte')">Geschichte</button>
-<button onclick="selectSubject('Wirtschaft und Recht')">W&R</button>
-</div>
+    <div class="grid">
+        <button onclick="selectSubject('Deutsch')">Deutsch</button>
+        <button onclick="selectSubject('Französisch')">Französisch</button>
+        <button onclick="selectSubject('Englisch')">Englisch</button>
+        <button onclick="selectSubject('Mathematik')">Mathematik</button>
+        <button onclick="selectSubject('Geschichte')">Geschichte</button>
+        <button onclick="selectSubject('Wirtschaft und Recht')">W&R</button>
+        <button onclick="selectSubject('Biologie')">Biologie</button>
+        <button onclick="selectSubject('Physik')">Physik</button>
+        <button onclick="selectSubject('Chemie')">Chemie</button>
+        <button onclick="selectSubject('Sozialwissenschaften')">Sozial</button>
+    </div>
 </div>
 
-<!-- SCREEN 2 -->
+<!-- MAIN APP -->
 <div id="screen2" class="screen" style="display:none;">
-<h2 id="subjectTitle"></h2>
+    <h2 id="subjectTitle"></h2>
 
-<textarea id="taskText" placeholder="Aufgabe eingeben"></textarea>
+    <textarea id="taskText" placeholder="Aufgabe hier eingeben..."></textarea>
 
-<br>
+    <br>
 
-<input type="file" id="imageInput">
-<div id="imageBox"></div>
+    <input type="file" id="imageInput">
+    <div id="imageBox"></div>
 
-<br>
+    <br>
 
-<canvas id="canvas" width="500" height="300"></canvas>
+    <canvas id="canvas" width="500" height="300"></canvas>
 
-<br>
+    <br>
 
-<button onclick="copyText()">📋 Text kopieren</button>
-<button onclick="copyCanvas()">🖼️ Zeichnung kopieren</button>
-<button onclick="openKI()">🤖 KI öffnen</button>
+    <button onclick="copyText()">📋 Text kopieren</button>
+    <button onclick="copyCanvas()">🖼️ Zeichnung kopieren</button>
+    <button onclick="openKI()">🤖 KI öffnen (Split)</button>
+    <button class="secondary" onclick="goBack()">↩ Zurück</button>
 </div>
 
-<!-- POPUP -->
+<!-- IMAGE POPUP -->
 <div id="popup" onclick="closePopup()">
-<img id="popupImg">
+    <img id="popupImg">
 </div>
 
 <script>
 
-window.addEventListener("load", () => {
-
-const appState={
-    subject:null,
-    image:null,
-    drawing:false
+/* GLOBAL STATE */
+const appState = {
+    subject: null,
+    image: null,
+    drawing: false
 };
 
-/* Fach */
-window.selectSubject=(s)=>{
-    appState.subject=s;
-    document.getElementById("screen1").style.display="none";
-    document.getElementById("screen2").style.display="flex";
-    document.getElementById("subjectTitle").innerText=s;
-};
+/* SUBJECT SELECT */
+function selectSubject(subject){
+    appState.subject = subject;
 
-/* Bild */
-document.getElementById("imageInput").addEventListener("change", e=>{
-    const file=e.target.files[0];
-    if(!file)return;
+    document.getElementById("screen1").style.display = "none";
+    document.getElementById("screen2").style.display = "flex";
 
-    const r=new FileReader();
-    r.onload=ev=>{
-        appState.image=ev.target.result;
-        imageBox.innerHTML=`<img src="${appState.image}" onclick="openPopup()" style="max-width:300px;p=()=>{
-    popupImg.src=appState.image;
-    popup.style.display="flex";
-};
+    document.getElementById("subjectTitle").innerText = subject;
+}
 
-window.closePopup=()=>popup.style.display="none";
+/* BACK */
+function goBack(){
+    document.getElementById("screen1").style.display = "flex";
+    document.getElementById("screen2").style.display = "none";
+}
 
-/* Canvas */
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+/* IMAGE UPLOAD */
+document.getElementById("imageInput").addEventListener("change", function(e){
+    const file = e.target.files[0];
+    if (!file) return;
 
-canvas.addEventListener("mousedown", e=>{
-    appState.drawing=true;
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX,e.offsetY);
+    const reader = new FileReader();
+    reader.onload = function(ev){
+        appState.image = ev.target.result;
+
+        document.getElementById("imageBox").innerHTML = `
+            <img src="${appState.image}" onclick="openader.readAsDataURL(file);
 });
 
-canvas.addEventListener("mousemove", e=>{
-    if(!appState.drawing)return;
-    ctx.lineTo(e.offsetX,e.offsetY);
+/* POPUP */
+function openPopup(){
+    if (!appState.image) return;
+
+    document.getElementById("popupImg").src = appState.image;
+    document.getElementById("popup").style.display = "flex";
+}
+function closePopup(){
+    document.getElementById("popup").style.display = "none";
+}
+
+/* CANVAS */
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+canvas.addEventListener("mousedown", function(e){
+    appState.drawing = true;
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+});
+
+canvas.addEventListener("mousemove", function(e){
+    if (!appState.drawing) return;
+    ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
 });
 
-canvas.addEventListener("mouseup", ()=>appState.drawing=false);
-
-/* Copy */
-window.copyText=async()=>{
-    const txt=taskText.value;
-    await navigator.clipboard.writeText(txt);
-    alert("Kopiert");
-};
-
-window.copyCanvas=()=>{
-    canvas.toBlob(async b=>{
-        await navigator.clipboard.write([new ClipboardItem({"image/png":b})]);
-        alert("Bild kopiert");
-    });
-};
-
-/* Split */
-window.openKI=()=>{
-    const w=screen.width;
-    const left=window.open(window.location.href + "?app","app",
-        `width=${w*0.65},height=${screen.height}`);
-
-    const right=window.open("https://chatgpt.com","ki",
-        `width=${w*0.35},height=${screen.height}`);
-
-    if(!right) alert("Popup blockiert!");
-};
-
+canvas.addEventListener("mouseup", function(){
+    appState.drawing = false;
 });
 
+/* COPY TEXT */
+async function copyText(){
+    const text = document.getElementById("taskText").value;
+
+    try{
+        await navigator.clipboard.writeText(text);
+        alert("✅ Kopiert");
+    }catch{
+        prompt("Kopieren:", text);
+    }
+}
+
+/* COPY CANVAS */
+function copyCanvas(){
+    canvas.toBlob(async function(blob){
+        try{
+            await navigator.clipboard.write([
+                new ClipboardItem({'image/png': blob})
+            ]);
+            alert("✅ Bild kopiert");
+        }catch{
+            alert("Kopieren blockiert");
+        }
+    });
+}
+
+/* SPLIT SCREEN */
+function openKI(){
+    const width = screen.width;
+
+    const appWindow = window.open(window.location.href, "app",
+        `width=${width*0.6},height=${screen.height}`);
+
+    const kiWindow = window.open("https://chatgpt.com", "ki",
+        `width=${width*0.4},height=${screen.height},left=${width*0.6}`);
+
+    if (!kiWindow){
+        alert("⚠️ Popup blockiert – bitte erlauben");
+    }
+}
+
 </script>
+
 </body>
 </html>
