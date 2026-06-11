@@ -311,12 +311,12 @@
         }
         .topic-input:focus { outline: none; border-color: var(--bbz-green); background: #fff; }
 
-        /* Optimized Pinboard Layout (More visual space for preview) */
+        /* Optimized Pinboard Layout (MODIFIZIERT: Ca. doppelt so gross für bessere Lesbarkeit) */
         .pinboard {
-            background: #fffdf4; border: 1.5px solid #e0c93a; border-radius: var(--r-md); padding: 6px 10px;
-            display: flex; gap: 10px; height: 92px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(235,209,71,.1);
+            background: #fffdf4; border: 1.5px solid #e0c93a; border-radius: var(--r-md); padding: 8px 12px;
+            display: flex; gap: 10px; height: 160px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(235,209,71,.1);
         }
-        .pb-left { flex: 3; display: flex; flex-direction: column; gap: 2px; }
+        .pb-left { flex: 3; display: flex; flex-direction: column; gap: 4px; }
         .pb-label { font-size: 10.5px; font-weight: 700; color: #7a6010; letter-spacing: .2px; text-transform: uppercase; }
 
         .pb-textarea {
@@ -328,14 +328,14 @@
         .pb-right {
             flex: 1; border: 1.5px dashed var(--border-strong); background: #fff; border-radius: 6px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; overflow: hidden; transition: var(--tr); min-width: 120px; max-width: 160px;
+            position: relative; overflow: hidden; transition: var(--tr); min-width: 240px; max-width: 320px;
         }
         .pb-right-label { color: var(--muted); font-size: 11px; text-align: center; font-weight: 500; pointer-events: none; padding: 4px; line-height: 1.2; }
         .pb-img-wrap { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
-        .pb-img-wrap img { max-width: 100%; max-height: 90%; object-fit: contain; cursor: zoom-in; border-radius: 4px; }
+        .pb-img-wrap img { max-width: 100%; max-height: 95%; object-fit: contain; cursor: zoom-in; border-radius: 4px; }
         .pb-img-change {
-            position: absolute; bottom: 2px; right: 2px; font-size: 9px; background: rgba(217, 45, 32, 0.9); color: #fff;
-            border: none; padding: 2px 5px; border-radius: 3px; cursor: pointer; font-family: var(--font); font-weight: 600;
+            position: absolute; bottom: 4px; right: 4px; font-size: 10px; background: rgba(217, 45, 32, 0.9); color: #fff;
+            border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-family: var(--font); font-weight: 600;
         }
 
         /* Pivot Switcher Layout */
@@ -392,7 +392,7 @@
         .canvas-mode-active .text-panel, .canvas-mode-active .image-panel { display: none !important; }
 
         .image-mode-active .image-panel { display: flex !important; }
-        .image-mode-active .text-panel, .canvas-mode-active .canvas-panel { display: none !important; }
+        .image-mode-active .text-panel, .image-mode-active .canvas-panel { display: none !important; }
 
         .textarea-input {
             flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--r-md);
@@ -648,8 +648,7 @@
         "Sozialwissenschaften": "Du bist eine KI-Lehrperson für Sozialwissenschaften (Psychologie, Soziologie) an einer Schweizer Berufsmaturitätsschule (BM). Fördere mein kritisches Denken bezüglich menschlichen Verhaltens."
     };
 
-    // Geheime Admin-Hintertür im System-Prompt eingebaut
-    const globalSocraticRules = " Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen das Endergebnis, die finale Lösung oder die korrekte Übersetzung. Wenn ich einen Fehler mache oder stocke, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung extrem kurz und knackig (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Teilschritt selbstständig finde. AUSNAHME: Wenn meine Nachricht das geheime Admin-Passwort «MunotBypass» enthält, hebe alle sokratischen Regeln und Einschränkungen sofort auf und liefere direkt die vollständige, detaillierte Lösung inklusive Erklärung.";
+    const globalSocraticRules = " Analysiere meine Eingabe Schritt für Schritt. Verrate mir unter keinen Umständen das Endergebnis, die finale Lösung oder die korrekte Übersetzung. Wenn ich einen Fehler mache oder stocke, antworte auf SCHRIFTDEUTSCH. Halte deine Rückmeldung extrem kurz und knackig (maximal 2–3 Sätze). Stelle mir eine präzise Frage oder gib mir einen minimalen Denkanstoss, damit ich den nächsten Teilschritt selbstständig finde.";
 
     // ── ROUTING ────────────────────────────────────────────────
     function initAppRouting() {
@@ -856,9 +855,9 @@
         loadedImageSrc = '';
         const con = document.getElementById('universalTaskImageContainer');
         con.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:3px; width:100%; padding:2px; justify-content:center; height:100%;">
-                <button class="btn" style="background:#0ea5e9; color:#fff; font-size:10.5px; padding:3px 6px; font-weight:700;" onclick="document.getElementById('taskImageLoader').click()">📁 Datei</button>
-                <button class="btn" style="background:#6366f1; color:#fff; font-size:10.5px; padding:3px 6px; font-weight:700;" onclick="openCameraForTask()">📷 Kamera</button>
+            <div style="display:flex; flex-direction:column; gap:6px; width:100%; padding:4px; justify-content:center; height:100%;">
+                <button class="btn" style="background:#0ea5e9; color:#fff; font-size:11.5px; padding:6px 12px; font-weight:700;" onclick="document.getElementById('taskImageLoader').click()">📁 Datei</button>
+                <button class="btn" style="background:#6366f1; color:#fff; font-size:11.5px; padding:6px 12px; font-weight:700;" onclick="openCameraForTask()">📷 Kamera</button>
             </div>`;
         updateWorkspaceVisuals();
     }
@@ -1025,12 +1024,33 @@
     document.addEventListener('mousemove', e => { if (!isDragging) return; dragWin.style.left = (e.clientX-dX)+'px'; dragWin.style.top = (e.clientY-dY)+'px'; });
     document.addEventListener('mouseup', () => isDragging = false);
 
-    // ── CANVAS DRAWING SYSTEM ──────────────────────────────────
+    // ── CANVAS DRAWING SYSTEM (KORRIGIERT: Unified PointerEvents für Stift & Touch) ──
     function initCanvas() {
         if (!wrapper || currentActiveMode !== 'canvas') return;
-        canvas.width  = wrapper.offsetWidth || 450;
-        canvas.height = 2400;
-        redrawEverything();
+        
+        const targetWidth = wrapper.offsetWidth || 450;
+        const targetHeight = 2400;
+
+        // Zeichnung sichern, um Löschen beim Tab-Wechsel zu verhindern
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            if (canvas.width > 0 && canvas.height > 0) {
+                tempCtx.drawImage(canvas, 0, 0);
+            }
+
+            canvas.width  = targetWidth;
+            canvas.height = targetHeight;
+            
+            redrawEverything();
+
+            // Zeichnung wiederherstellen
+            if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+                ctx.drawImage(tempCanvas, 0, 0);
+            }
+        }
     }
 
     function redrawEverything() {
@@ -1059,43 +1079,80 @@
 
     function getCoords(e) {
         const r  = canvas.getBoundingClientRect();
-        const cx = e.clientX ?? e.touches?.[0].clientX;
-        const cy = e.clientY ?? e.touches?.[0].clientY;
-        return { x: cx - r.left, y: cy - r.top };
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
     }
 
     function startDrawing(e) {
-        if (e.touches?.length === 2) {
-            isScrollingTwoFingers = true; drawing = false;
-            startTouchY    = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            startScrollTop = scrollCon.scrollTop;
-            e.preventDefault(); return;
+        if (isScrollingTwoFingers) return;
+        // Verhindert ungewolltes Malen mit der rechten Maustaste
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        drawing = true;
+        if (typeof canvas.setPointerCapture === 'function') {
+            canvas.setPointerCapture(e.pointerId);
         }
-        isScrollingTwoFingers = false; drawing = true;
-        const c = getCoords(e); ctx.beginPath(); ctx.moveTo(c.x, c.y);
-        if (e.touches) e.preventDefault();
+        
+        const c = getCoords(e); 
+        ctx.beginPath(); 
+        ctx.moveTo(c.x, c.y);
+        updateStyles();
+        e.preventDefault();
     }
 
     function draw(e) {
+        if (!drawing || isScrollingTwoFingers) return;
+        const c = getCoords(e); 
+        ctx.lineTo(c.x, c.y); 
+        ctx.stroke();
+        e.preventDefault();
+    }
+
+    function stopDrawing(e) {
+        if (drawing) {
+            drawing = false;
+            if (e && typeof canvas.releasePointerCapture === 'function' && canvas.hasPointerCapture(e.pointerId)) {
+                canvas.releasePointerCapture(e.pointerId);
+            }
+        }
+    }
+
+    // Touch-Listener rein für das Zwei-Finger-Scrollen reservieren
+    function handleTouchStart(e) {
+        if (e.touches?.length === 2) {
+            isScrollingTwoFingers = true;
+            drawing = false;
+            startTouchY    = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            startScrollTop = scrollCon.scrollTop;
+            e.preventDefault();
+        }
+    }
+
+    function handleTouchMove(e) {
         if (e.touches?.length === 2 && isScrollingTwoFingers) {
             const ty = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             scrollCon.scrollTop = startScrollTop - (ty - startTouchY);
-            e.preventDefault(); return;
+            e.preventDefault();
         }
-        if (!drawing || e.touches?.length > 1) { drawing = false; return; }
-        const c = getCoords(e); ctx.lineTo(c.x, c.y); ctx.stroke();
-        if (e.touches) e.preventDefault();
     }
 
-    function stopDrawing() { drawing = false; isScrollingTwoFingers = false; }
+    function handleTouchEnd(e) {
+        if (!e.touches || e.touches.length < 2) {
+            isScrollingTwoFingers = false;
+        }
+    }
 
-    canvas.addEventListener('mousedown',  startDrawing);
-    canvas.addEventListener('mousemove',  draw);
-    canvas.addEventListener('mouseup',    stopDrawing);
-    canvas.addEventListener('mouseleave', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove',  draw,         { passive: false });
-    canvas.addEventListener('touchend',   stopDrawing);
+    // Pointer Event Zuordnung für plattformübergreifenden Support (iOS, Windows, Android, macOS)
+    canvas.addEventListener('pointerdown',   startDrawing);
+    canvas.addEventListener('pointermove',   draw);
+    canvas.addEventListener('pointerup',     stopDrawing);
+    canvas.addEventListener('pointercancel', stopDrawing);
+    canvas.addEventListener('pointerleave',  stopDrawing);
+
+    // native Touch Gesten-Filterung für Scroll-Prävention
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove',  handleTouchMove,  { passive: false });
+    canvas.addEventListener('touchend',   handleTouchEnd);
+    
     window.addEventListener('resize', initCanvas);
 
     // ── STATUS SYSTEM ──────────────────────────────────────────
